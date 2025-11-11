@@ -1,0 +1,845 @@
+/**
+ * Campus Resource Hub - Authentication Pages Styles
+ * Shared CSS for login and register pages
+ */
+
+/* ============================================================
+   Fonts
+   ============================================================ */
+@font-face {
+    font-family: 'Satoshi';
+    src: local('Satoshi Regular');
+    font-weight: 400;
+}
+
+@font-face {
+    font-family: 'Satoshi';
+    src: local('Satoshi Medium');
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'Satoshi';
+    src: local('Satoshi Bold');
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: 'Switzer';
+    src: local('Switzer Medium');
+    font-weight: 500;
+}
+
+/* ============================================================
+   Theme Variables
+   ============================================================ */
+:root {
+    --bg-primary: #000;
+    --bg-secondary: #000;
+    --text-primary: #fff;
+    --text-secondary: rgba(255, 255, 255, 0.88);
+    --text-tertiary: rgba(255, 255, 255, 0.8);
+    --text-quaternary: rgba(255, 255, 255, 0.7);
+    --text-quinary: rgba(255, 255, 255, 0.6);
+    --text-senary: rgba(255, 255, 255, 0.5);
+    --input-bg: rgba(255, 255, 255, 0.1);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --input-focus-border: rgba(255, 255, 255, 0.3);
+    --input-focus-bg: rgba(255, 255, 255, 0.12);
+    --btn-bg: #fff;
+    --btn-text: #000;
+    --quote-text: #000;
+    --logo-text: #000;
+    --blur-bg: white;
+    --gradient-1: #9909DD;
+    --gradient-2: #8646EE;
+    --gradient-3: #3F0B93;
+    --gradient-4: black;
+}
+
+[data-theme="light"] {
+    --bg-primary: #fff;
+    --bg-secondary: #fff;
+    --text-primary: #000;
+    --text-secondary: rgba(0, 0, 0, 0.88);
+    --text-tertiary: rgba(0, 0, 0, 0.8);
+    --text-quaternary: rgba(0, 0, 0, 0.7);
+    --text-quinary: rgba(0, 0, 0, 0.6);
+    --text-senary: rgba(0, 0, 0, 0.5);
+    --input-bg: rgba(0, 0, 0, 0.05);
+    --input-border: rgba(0, 0, 0, 0.15);
+    --input-focus-border: rgba(0, 0, 0, 0.3);
+    --input-focus-bg: rgba(0, 0, 0, 0.08);
+    --btn-bg: #000;
+    --btn-text: #fff;
+    --quote-text: rgba(255, 255, 255, 0.8);
+    --logo-text: #fff;
+    --blur-bg: #000;
+    --gradient-1: #9909DD;
+    --gradient-2: #8646EE;
+    --gradient-3: #3F0B93;
+    --gradient-4: #fff;
+}
+
+/* ============================================================
+   Reset & Base
+   ============================================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+    font-family: 'Actor', sans-serif;
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s ease;
+}
+
+/* ============================================================
+   Container Layout
+   ============================================================ */
+.container-wrapper {
+    width: 100%;
+    height: 100vh;
+}
+
+.signin-container {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-primary);
+    overflow: hidden;
+    display: flex;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+/* ============================================================
+   Left Panel - Visual
+   ============================================================ */
+.left-panel {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    padding: 12px;
+    flex-shrink: 0;
+}
+
+.left-panel-inner {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-secondary);
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    transition: background-color 0.3s ease;
+}
+
+/* Gradient Blurs */
+.blur-white {
+    position: absolute;
+    width: 120%;
+    height: 60%;
+    left: -10%;
+    top: -10%;
+    background: var(--blur-bg);
+    filter: blur(80px);
+    transition: background 0.3s ease;
+}
+
+.gradient-ellipse-1 {
+    position: absolute;
+    left: 50%;
+    top: 5%;
+    transform: translateX(-50%);
+    width: 140%;
+    height: 90%;
+    pointer-events: none;
+}
+
+.gradient-ellipse-2 {
+    position: absolute;
+    left: 50%;
+    top: 15%;
+    transform: translateX(-50%);
+    width: 115%;
+    height: 68%;
+    pointer-events: none;
+}
+
+.gradient-ellipse-3 {
+    position: absolute;
+    left: 50%;
+    top: 26%;
+    transform: translateX(-50%);
+    width: 92%;
+    height: 45%;
+    pointer-events: none;
+}
+
+.gradient-ellipse-4 {
+    position: absolute;
+    left: 50%;
+    top: 30%;
+    transform: translateX(-50%);
+    width: 160%;
+    height: 83%;
+    pointer-events: none;
+}
+
+/* SVG Gradient Colors */
+.gradient-ellipse-1 ellipse {
+    fill: var(--gradient-1);
+    transition: fill 0.3s ease;
+}
+
+.gradient-ellipse-2 ellipse {
+    fill: var(--gradient-2);
+    transition: fill 0.3s ease;
+}
+
+.gradient-ellipse-3 ellipse {
+    fill: var(--gradient-3);
+    transition: fill 0.3s ease;
+}
+
+.gradient-ellipse-4 ellipse {
+    fill: var(--gradient-4);
+    transition: fill 0.3s ease;
+}
+
+/* Noise Texture */
+.noise-texture {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADhJREFUeNpiYGBg4GegEjCCCTIMoyoZR1UyMlARjKpkHFXJyEBFMKqScVQl46hKxlGVDAwAAQYAGmABnVn94qYAAAAASUVORK5CYII=');
+    background-repeat: repeat;
+    background-size: 10px 10px;
+    background-position: top left;
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+/* Quote */
+.quote {
+    position: absolute;
+    left: 40px;
+    top: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+}
+
+.quote-text {
+    font-family: 'Satoshi', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--quote-text);
+    line-height: 1.4;
+    transition: color 0.3s ease;
+}
+
+.quote-line {
+    width: 100px;
+    height: 1px;
+    position: relative;
+}
+
+.quote-line line {
+    stroke: var(--quote-text);
+    transition: stroke 0.3s ease;
+}
+
+/* Logo */
+.logo {
+    position: absolute;
+    right: 40px;
+    top: 38px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.logo-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.logo-icon path {
+    fill: var(--logo-text);
+    transition: fill 0.3s ease;
+}
+
+.logo-text {
+    font-family: 'Satoshi', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    color: var(--logo-text);
+    transition: color 0.3s ease;
+}
+
+/* Title and Subtitle */
+.title-subtitle {
+    position: absolute;
+    left: 40px;
+    bottom: 80px;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 10;
+}
+
+.title {
+    font-family: 'Noto Serif', serif;
+    font-size: 64px;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    color: var(--text-primary);
+    font-weight: 400;
+    transition: color 0.3s ease;
+}
+
+.subtitle {
+    font-family: 'Satoshi', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    transition: color 0.3s ease;
+}
+
+/* ============================================================
+   Right Panel - Form
+   ============================================================ */
+.right-panel {
+    position: relative;
+    width: 50%;
+    height: 100%;
+    padding: 80px 60px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 20px 0;
+}
+
+.header-text {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.header-title {
+    font-family: 'Actor', sans-serif;
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.header-subtitle {
+    font-family: 'Actor', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
+}
+
+/* ============================================================
+   Form Elements
+   ============================================================ */
+.form-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.form-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-label {
+    font-family: 'Switzer', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.input-wrapper {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    transition: all 0.3s;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--input-focus-border);
+    background: var(--input-focus-bg);
+}
+
+.form-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 14px 16px;
+    font-family: 'Actor', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    width: 100%;
+    flex: 1;
+    transition: color 0.3s ease;
+}
+
+.form-input::placeholder {
+    color: var(--text-senary);
+}
+
+.form-input:focus {
+    outline: none;
+}
+
+.password-input-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.password-input-wrapper .input-field,
+.password-input-wrapper .form-input {
+    width: 100%;
+    padding-right: 45px; /* Space for icon */
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+    pointer-events: auto;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    opacity: 1;
+}
+
+/* ============================================================
+   Form Footer
+   ============================================================ */
+.form-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-quaternary);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.remember-me input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.forgot-link {
+    font-size: 13px;
+    color: var(--text-quaternary);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.forgot-link:hover {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+/* ============================================================
+   Buttons
+   ============================================================ */
+.submit-btn {
+    background: var(--btn-bg);
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'Actor', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 600;
+    color: var(--btn-text);
+    cursor: pointer;
+    transition: all 0.3s;
+    width: 100%;
+}
+
+.submit-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.submit-btn:active {
+    transform: translateY(0);
+}
+
+/* ============================================================
+   Links
+   ============================================================ */
+.signup-text {
+    font-family: 'Actor', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-quinary);
+    text-align: center;
+    transition: color 0.3s ease;
+}
+
+.signup-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+/* ============================================================
+   Alert Messages
+   ============================================================ */
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.alert-danger {
+    background: rgba(220, 53, 69, 0.15);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #ff6b6b;
+}
+
+.alert-success {
+    background: rgba(25, 135, 84, 0.15);
+    border: 1px solid rgba(25, 135, 84, 0.3);
+    color: #51cf66;
+}
+
+/* ============================================================
+   Register Page Specific Styles
+   ============================================================ */
+.logo-img {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.logo-title {
+    font-family: 'Satoshi', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.signin-title {
+    font-family: 'Actor', sans-serif;
+    font-size: 36px;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-align: left;
+    transition: color 0.3s ease;
+}
+
+.signin-subtitle {
+    font-family: 'Actor', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-tertiary);
+    margin-bottom: 32px;
+    transition: color 0.3s ease;
+}
+
+.signin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.input-label {
+    font-family: 'Switzer', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-primary);
+    transition: color 0.3s ease;
+}
+
+.input-field {
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'Actor', sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text-primary);
+    width: 100%;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.input-field::placeholder {
+    color: var(--text-senary);
+}
+
+.input-field:focus {
+    border-color: var(--input-focus-border);
+    background: var(--input-focus-bg);
+}
+
+.signin-button {
+    background: var(--btn-bg);
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    font-family: 'Actor', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 600;
+    color: var(--btn-text);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.signin-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="light"] .signin-button:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.signin-button:active {
+    transform: translateY(0);
+}
+
+.info-note {
+    background: rgba(153, 9, 221, 0.1);
+    border: 1px solid rgba(153, 9, 221, 0.2);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+}
+
+.info-note strong {
+    font-weight: 600;
+}
+
+/* ============================================================
+   Theme Toggle Button
+   ============================================================ */
+.theme-toggle {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    z-index: 1000;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--btn-bg);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+}
+
+.theme-toggle svg {
+    width: 24px;
+    height: 24px;
+}
+
+.theme-toggle .sun-icon {
+    display: none;
+    color: var(--btn-text);
+}
+
+.theme-toggle .moon-icon {
+    display: block;
+    color: var(--btn-text);
+}
+
+[data-theme="light"] .theme-toggle .sun-icon {
+    display: block;
+    stroke: var(--btn-text);
+}
+
+[data-theme="light"] .theme-toggle .moon-icon {
+    display: none;
+}
+
+/* ============================================================
+   Responsive Design
+   ============================================================ */
+@media (max-width: 1200px) {
+    .title {
+        font-size: 52px;
+    }
+}
+
+@media (max-width: 992px) {
+    .signin-container {
+        flex-direction: column;
+    }
+
+    .left-panel {
+        width: 100%;
+        height: 40vh;
+        min-height: 300px;
+    }
+
+    .right-panel {
+        width: 100%;
+        height: 60vh;
+        padding: 40px 30px;
+    }
+
+    .title {
+        font-size: 48px;
+    }
+
+    .title-subtitle {
+        bottom: 40px;
+        max-width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    .left-panel {
+        height: 35vh;
+        min-height: 250px;
+    }
+
+    .right-panel {
+        height: 65vh;
+        padding: 30px 20px;
+    }
+
+    .title {
+        font-size: 40px;
+    }
+
+    .subtitle {
+        font-size: 14px;
+    }
+
+    .header-title {
+        font-size: 28px;
+    }
+
+    .quote {
+        left: 20px;
+        top: 20px;
+    }
+
+    .logo {
+        right: 20px;
+        top: 20px;
+    }
+
+    .title-subtitle {
+        left: 20px;
+        bottom: 30px;
+    }
+}
+
+@media (max-width: 576px) {
+    .left-panel {
+        display: none;
+    }
+
+    .right-panel {
+        height: 100vh;
+    }
+
+    .form-container {
+        max-width: 100%;
+    }
+}

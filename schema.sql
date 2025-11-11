@@ -83,12 +83,12 @@ CREATE TABLE resource_categories (
 CREATE TABLE resources (
     resource_id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_type TEXT NOT NULL CHECK (owner_type IN ('user','group')),
-    owner_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,  -- Polymorphic FK: user_id when owner_type='user', group_id when owner_type='group'
     title TEXT NOT NULL,
     description TEXT,
     category_id INTEGER REFERENCES resource_categories(category_id),
     location TEXT,
-    capacity INTEGER CHECK (capacity > 0),
+    capacity INTEGER CHECK (capacity > 0 OR capacity IS NULL),  -- NULL for resources without capacity limits
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','published','archived')),
     availability_mode TEXT NOT NULL DEFAULT 'rules' CHECK (availability_mode IN ('rules','open','by-request')),
     requires_approval BOOLEAN NOT NULL DEFAULT 0,

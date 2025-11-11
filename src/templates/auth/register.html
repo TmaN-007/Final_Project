@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Campus Resource Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Actor&family=Noto+Serif:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+
+    <!-- Anime.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <style>
+        /* Additional styles specific to register form */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .password-requirements {
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.6;
+        }
+
+        [data-theme="light"] .password-requirements {
+            color: rgba(0, 0, 0, 0.6);
+        }
+
+        .password-requirements .req-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        [data-theme="light"] .password-requirements .req-title {
+            color: rgba(0, 0, 0, 0.8);
+        }
+
+        .password-requirements ul {
+            margin: 0;
+            padding-left: 16px;
+        }
+
+        .password-requirements li {
+            margin: 2px 0;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+        <!-- Sun Icon (shows in dark mode) -->
+        <svg class="sun-icon" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+            <line x1="1" y1="12" x2="3" y2="12"/>
+            <line x1="21" y1="12" x2="23" y2="12"/>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </svg>
+        <!-- Moon Icon (shows in light mode) -->
+        <svg class="moon-icon" width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
+        </svg>
+    </button>
+
+    <div class="container-wrapper">
+        <div class="signin-container">
+            <!-- Left Panel - Visual -->
+            <div class="left-panel">
+                <div class="left-panel-inner">
+                    <!-- Blur Effects -->
+                    <div class="blur-white"></div>
+
+                    <!-- Gradient Ellipses (SVG) -->
+                    <div class="gradient-ellipse-1">
+                        <div style="position: absolute; inset: -31.25% -24.81%;">
+                            <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 773 666">
+                                <defs>
+                                    <filter id="filter0_f_1_87" x="0" y="0" width="772.117" height="665.839" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                                        <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_1_87"/>
+                                    </filter>
+                                </defs>
+                                <g filter="url(#filter0_f_1_87)">
+                                    <ellipse cx="386.059" cy="332.919" rx="258.013" ry="204.874" fill="#9909DD"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="gradient-ellipse-2">
+                        <div style="position: absolute; inset: -41.49% -30.77%;">
+                            <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 673 565">
+                                <defs>
+                                    <filter id="filter0_f_1_72" x="0" y="0" width="672.241" height="564.683" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                                        <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_1_72"/>
+                                    </filter>
+                                </defs>
+                                <g filter="url(#filter0_f_1_72)">
+                                    <ellipse cx="336.121" cy="282.341" rx="208.075" ry="154.295" fill="#8646EE"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="gradient-ellipse-3">
+                        <div style="position: absolute; inset: -62.11% -38.17%;">
+                            <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 592 463">
+                                <defs>
+                                    <filter id="filter0_f_1_76" x="0" y="0" width="591.572" height="462.246" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                                        <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_1_76"/>
+                                    </filter>
+                                </defs>
+                                <g filter="url(#filter0_f_1_76)">
+                                    <ellipse cx="295.786" cy="231.123" rx="167.74" ry="103.077" fill="#3F0B93"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div class="gradient-ellipse-4">
+                        <div style="position: absolute; inset: -37.04% -24.07%;">
+                            <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 867 662">
+                                <defs>
+                                    <filter id="filter0_f_1_74" x="0" y="0" width="866.871" height="661.998" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+                                        <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+                                        <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+                                        <feGaussianBlur stdDeviation="70.4253" result="effect1_foregroundBlur_1_74"/>
+                                    </filter>
+                                </defs>
+                                <g filter="url(#filter0_f_1_74)">
+                                    <ellipse cx="433.436" cy="330.999" rx="292.585" ry="190.148" fill="black"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Noise Texture -->
+                    <div class="noise-texture"></div>
+
+                    <!-- Quote -->
+                    <div class="quote">
+                        <div class="quote-text">CAMPUS RESOURCES</div>
+                        <div class="quote-line">
+                            <svg style="position: absolute; left: 0; right: 0; top: -0.48px; bottom: 0; width: 100%; height: 1px;" fill="none" preserveAspectRatio="none" viewBox="0 0 72 1">
+                                <line stroke="black" stroke-width="0.477895" x2="71.6842" y1="0.238947" y2="0.238947" />
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Logo -->
+                    <div class="logo">
+                        <svg class="logo-icon" fill="none" preserveAspectRatio="none" viewBox="0 0 11 11">
+                            <g>
+                                <path d="M6.16487 7.90918C5.32855 7.59855 4.46834 7.55077 3.67982 7.76582C3.13024 7.90919 2.60455 8.19592 2.12666 8.55434L1.79213 8.84108L1.69655 8.93666L1.9116 9.12781C1.93549 9.12781 1.9355 9.15171 1.95939 9.17561C2.00718 9.2234 2.05497 9.24729 2.12666 9.29508L2.27002 9.39066L2.41339 9.27118C2.43728 9.24729 2.48507 9.1995 2.53286 9.17561C2.96297 8.81719 3.44086 8.57824 3.94265 8.45876C4.58781 8.2915 5.28076 8.3154 5.97371 8.57824C6.54718 8.79329 7.71802 9.05613 9.12781 8.45876L9.17561 8.43487L9.24729 8.36319C9.24729 8.33929 9.27119 8.33929 9.29508 8.31539C9.41455 8.17203 9.53403 8.02866 9.62961 7.8614L10.1075 7.12066L9.34287 7.55076C8.21981 8.17202 7.19234 8.2915 6.16487 7.90918Z" fill="black"/>
+                                <path d="M2.89127 5.3285C3.53642 5.16124 4.22937 5.18513 4.92232 5.44797C5.68695 5.73471 7.64632 6.14092 9.84464 4.15766L10.2031 3.79924L10.227 3.77534L10.3225 3.67976L10.2747 3.56029C10.2508 3.46471 10.2031 3.34524 10.1553 3.22577L10.0358 2.89123L9.79685 3.13018C9.77295 3.17797 9.72516 3.20186 9.67737 3.24965C8.626 4.32492 7.00116 5.42408 5.13737 4.75503C4.30105 4.4444 3.44084 4.3966 2.65232 4.61166C1.88769 4.82671 1.21863 5.23292 0.597369 5.80639V5.7825L0.238947 6.16482C0.238947 6.18871 0.215057 6.18871 0.191162 6.21261L0.119474 6.28429L0.14337 6.37987C0.167265 6.49934 0.215053 6.61881 0.238947 6.73829L0.382317 7.12061L0.621265 6.80998C0.64516 6.76219 0.692948 6.73829 0.716842 6.6905C1.21863 6.2365 1.91158 5.59134 2.89127 5.3285Z" fill="black"/>
+                                <path d="M0.573487 4.89841C1.12307 4.32493 1.74433 3.96651 2.41338 3.77535C3.05854 3.60809 3.75148 3.63198 4.44443 3.89482C6.59496 4.68335 8.45875 3.39303 9.27117 2.70009L9.5818 2.38946L9.70128 2.29387L9.6057 2.15051C9.53401 2.07883 9.48623 1.98325 9.41454 1.88767L9.27117 1.6965L9.10391 1.86377C9.08001 1.88767 9.03222 1.93545 9.00833 1.95935C8.00475 2.91514 6.45159 3.89483 4.68338 3.22577C3.84706 2.91514 2.98685 2.86735 2.19833 3.0824C1.69654 3.22577 1.21864 3.46472 0.740746 3.77535L0.238955 4.18156C0.191165 4.22935 0.167271 4.25325 0.119481 4.30104L0.0716961 4.34882V4.42051C0.0478014 4.58777 0.0477985 4.75504 0.0239037 4.89841L7.51212e-06 5.49578L0.406221 5.06567C0.454011 5.01788 0.501803 4.9462 0.573487 4.89841Z" fill="black"/>
+                                <path d="M6.85776 9.53396L6.80996 9.67733L6.85776 9.53396C6.78607 9.51006 6.73829 9.48616 6.6666 9.46227C5.83029 9.15164 4.97007 9.10385 4.18154 9.31891C4.01428 9.3667 3.84702 9.41448 3.67976 9.48617L3.10628 9.74901L2.96292 9.82069L3.44081 9.98796C3.58418 10.0357 3.72755 10.0835 3.87091 10.1313L3.94259 10.1552L4.01428 10.1313C4.08597 10.1074 4.15765 10.0596 4.22933 10.0596C4.27712 10.0596 4.32492 10.0357 4.3727 10.0119C4.94618 9.86849 5.56744 9.86848 6.23649 10.0835C6.30818 10.1074 6.35597 10.1313 6.42765 10.1552L6.54713 10.203L6.61881 10.1791C6.78607 10.1313 6.97723 10.0835 7.1206 10.0119L7.78965 9.77291L7.0967 9.60564C7.02502 9.58175 6.92944 9.55785 6.85776 9.53396Z" fill="black"/>
+                                <path d="M1.43373 2.38964L1.36205 2.24627L1.43373 2.38964C1.5771 2.31795 1.74437 2.27016 1.88774 2.22237C2.53289 2.05511 3.22584 2.079 3.91879 2.34184C4.37279 2.50911 4.82679 2.58079 5.32858 2.58079C6.33216 2.58079 7.33573 2.22237 8.26763 1.52942L8.62605 1.24268L8.74552 1.14711L8.53047 0.979841C8.45879 0.908157 8.36321 0.836475 8.26763 0.788686L8.12426 0.693108L8.00479 0.788686C7.957 0.812581 7.9331 0.860369 7.88531 0.884263C6.61889 1.84005 5.35248 2.1029 4.15774 1.6489C3.29753 1.33827 2.43731 1.26658 1.5771 1.52942C1.50542 1.55332 1.43373 1.57721 1.33815 1.60111L1.29037 1.625L1.21868 1.69668C1.21868 1.72058 1.19479 1.72058 1.17089 1.74448C1.07532 1.88784 0.955837 2.00732 0.860258 2.15069L0.406259 2.84364L1.147 2.46132C1.26647 2.46132 1.36205 2.41353 1.43373 2.38964Z" fill="black"/>
+                                <path d="M3.39306 0.764699L3.46474 0.788595C3.77537 0.908068 4.25327 1.02754 4.85064 1.02754C5.4719 1.02754 6.06927 0.884172 6.66664 0.645225L7.40737 0.286804L6.90559 0.119545C6.76222 0.0717552 6.61885 0.0239657 6.45158 7.09193e-05H6.3799L6.30822 0.0239598C6.23654 0.0478546 6.16485 0.0956499 6.09316 0.119545C5.37632 0.382387 4.65948 0.430176 3.96653 0.239018C3.89485 0.215124 3.82316 0.191225 3.75148 0.16733L3.6798 0.143434L3.60811 0.16733C3.46474 0.215119 3.32138 0.262912 3.17801 0.334596L2.62842 0.573543L3.2019 0.740802C3.24969 0.716908 3.32137 0.740804 3.39306 0.764699Z" fill="black"/>
+                                <path d="M10.5136 4.58792L10.1552 4.94634C10.1074 4.99413 10.0596 5.04192 10.0118 5.08971C9.03216 6.02161 7.45511 7.02518 5.68689 6.35613C4.85058 6.0455 3.99037 5.99771 3.20184 6.21277C2.4611 6.42782 1.79205 6.81013 1.19468 7.38361L0.884049 7.71813L0.788471 7.83761L0.884049 7.98098C0.955733 8.07656 1.00353 8.14824 1.05131 8.24382L1.19468 8.45887L1.36194 8.24382C1.38584 8.21993 1.43363 8.17213 1.45752 8.14824C2.03099 7.52697 2.65226 7.14466 3.3691 6.9535C4.01426 6.78624 4.70721 6.81013 5.40015 7.07297C5.99752 7.28803 6.61879 7.35972 7.24005 7.28803C8.33921 7.16856 9.43837 6.54729 10.2508 5.85435C10.2986 5.80656 10.3464 5.78266 10.3942 5.73487L10.4658 5.66318V5.5915C10.4658 5.44813 10.4897 5.28087 10.4897 5.1375L10.5136 4.58792Z" fill="black"/>
+                            </g>
+                        </svg>
+                        <div class="logo-text">Campus Hub</div>
+                    </div>
+
+                    <!-- Title and Subtitle -->
+                    <div class="title-subtitle">
+                        <div class="title">Join<br/>Campus<br/>Resources</div>
+                        <div class="subtitle">Book rooms, equipment, and services seamlessly. Everything you need to succeed on campus, in one place.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel -->
+            <div class="right-panel">
+                <div class="form-container">
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Header -->
+                    <div class="header-text" style="text-align: center;">
+                        <h2 class="signin-title" style="display: block !important; visibility: visible !important; text-align: center !important;">Sign Up Account</h2>
+                        <p class="signin-subtitle" style="display: block !important; visibility: visible !important; text-align: center !important;">Enter your personal data to create your account.</p>
+                    </div>
+
+                    <!-- Registration Form -->
+                    <form method="POST" action="{{ url_for('auth.register') }}" class="signin-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+                    <!-- Full Name -->
+                    <div class="input-group">
+                        <label for="name" class="input-label">Full Name</label>
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            class="input-field"
+                            placeholder="John Doe"
+                            required
+                            autocomplete="name"
+                        />
+                    </div>
+
+                    <!-- Email -->
+                    <div class="input-group">
+                        <label for="email" class="input-label">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            class="input-field"
+                            placeholder="john.doe@iu.edu"
+                            required
+                            autocomplete="email"
+                        />
+                    </div>
+
+                    <!-- Password -->
+                    <div class="input-group">
+                        <label for="password" class="input-label">Password</label>
+                        <div class="password-input-wrapper">
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="input-field"
+                                placeholder="Enter your password"
+                                required
+                                autocomplete="new-password"
+                                minlength="8"
+                            />
+                            <svg class="password-toggle" onclick="togglePasswordField('password')" fill="none" preserveAspectRatio="none" viewBox="0 0 9 9">
+                                <g clip-path="url(#clip0_1_67)">
+                                    <path d="M1.48863 3.07526C1.13877 3.48818 0.878258 3.9691 0.723508 4.4877C1.20666 6.10993 2.70923 7.29239 4.48777 7.29239C4.85911 7.29239 5.21811 7.24078 5.55842 7.14468M2.32929 2.32921C2.96974 1.90659 3.72044 1.68185 4.48777 1.68301C6.26632 1.68301 7.76851 2.86547 8.25166 4.48695C7.98689 5.37299 7.4185 6.13746 6.64626 6.64619M2.32929 2.32921L1.12215 1.12208M2.32929 2.32921L3.69423 3.69416M6.64626 6.64619L7.8534 7.85333M6.64626 6.64619L5.28131 5.28124C5.3855 5.17706 5.46814 5.05337 5.52452 4.91725C5.58091 4.78112 5.60993 4.63523 5.60993 4.48789C5.60993 4.34055 5.58091 4.19465 5.52452 4.05853C5.46814 3.92241 5.3855 3.79872 5.28131 3.69454C5.17713 3.59035 5.05344 3.50771 4.91732 3.45132C4.7812 3.39494 4.6353 3.36592 4.48796 3.36592C4.34062 3.36592 4.19472 3.39494 4.0586 3.45132C3.92248 3.50771 3.79879 3.59035 3.69461 3.69454M5.28094 5.28087L3.69498 3.69491" stroke="white" stroke-opacity="0.72" stroke-width="0.560937" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip0_1_67">
+                                        <rect fill="white" width="8.975" height="8.975"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div class="password-requirements">
+                            <div class="req-title">Password must contain:</div>
+                            <ul>
+                                <li>At least 8 characters</li>
+                                <li>One uppercase letter</li>
+                                <li>One lowercase letter</li>
+                                <li>One number</li>
+                                <li>One special character</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="input-group">
+                        <label for="confirm_password" class="input-label">Confirm Password</label>
+                        <div class="password-input-wrapper">
+                            <input
+                                type="password"
+                                id="confirm_password"
+                                name="confirm_password"
+                                class="input-field"
+                                placeholder="Re-enter your password"
+                                required
+                                autocomplete="new-password"
+                            />
+                            <svg class="password-toggle" onclick="togglePasswordField('confirm_password')" fill="none" preserveAspectRatio="none" viewBox="0 0 9 9">
+                                <g clip-path="url(#clip1_1_67)">
+                                    <path d="M1.48863 3.07526C1.13877 3.48818 0.878258 3.9691 0.723508 4.4877C1.20666 6.10993 2.70923 7.29239 4.48777 7.29239C4.85911 7.29239 5.21811 7.24078 5.55842 7.14468M2.32929 2.32921C2.96974 1.90659 3.72044 1.68185 4.48777 1.68301C6.26632 1.68301 7.76851 2.86547 8.25166 4.48695C7.98689 5.37299 7.4185 6.13746 6.64626 6.64619M2.32929 2.32921L1.12215 1.12208M2.32929 2.32921L3.69423 3.69416M6.64626 6.64619L7.8534 7.85333M6.64626 6.64619L5.28131 5.28124C5.3855 5.17706 5.46814 5.05337 5.52452 4.91725C5.58091 4.78112 5.60993 4.63523 5.60993 4.48789C5.60993 4.34055 5.58091 4.19465 5.52452 4.05853C5.46814 3.92241 5.3855 3.79872 5.28131 3.69454C5.17713 3.59035 5.05344 3.50771 4.91732 3.45132C4.7812 3.39494 4.6353 3.36592 4.48796 3.36592C4.34062 3.36592 4.19472 3.39494 4.0586 3.45132C3.92248 3.50771 3.79879 3.59035 3.69461 3.69454M5.28094 5.28087L3.69498 3.69491" stroke="white" stroke-opacity="0.72" stroke-width="0.560937" stroke-linecap="round" stroke-linejoin="round"/>
+                                </g>
+                                <defs>
+                                    <clipPath id="clip1_1_67">
+                                        <rect fill="white" width="8.975" height="8.975"/>
+                                    </clipPath>
+                                </defs>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Note about account type -->
+                    <div class="info-note">
+                        <strong>Note:</strong> All new accounts are created as Student accounts. Contact an administrator for staff or admin privileges.
+                    </div>
+
+                    <button type="submit" class="signin-button">Sign Up</button>
+
+                    <div class="signup-link">
+                        Already have an account? <a href="{{ url_for('auth.login') }}">Log in</a>
+                    </div>
+                </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script>
+        // Password validation
+        document.addEventListener('DOMContentLoaded', () => {
+            const password = document.getElementById('password');
+            const confirmPassword = document.getElementById('confirm_password');
+
+            password.addEventListener('input', () => {
+                const value = password.value;
+                const hasUpperCase = /[A-Z]/.test(value);
+                const hasLowerCase = /[a-z]/.test(value);
+                const hasNumber = /[0-9]/.test(value);
+                const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
+                const isLongEnough = value.length >= 8;
+
+                if (!isLongEnough || !hasUpperCase || !hasLowerCase || !hasNumber || !hasSpecialChar) {
+                    password.setCustomValidity('Password does not meet requirements');
+                } else {
+                    password.setCustomValidity('');
+                }
+            });
+
+            confirmPassword.addEventListener('input', () => {
+                if (confirmPassword.value && password.value !== confirmPassword.value) {
+                    confirmPassword.setCustomValidity('Passwords do not match');
+                } else {
+                    confirmPassword.setCustomValidity('');
+                }
+            });
+        });
+    </script>
+
+    <!-- Anime.js Animations -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade in quote
+            anime({
+                targets: '.quote',
+                opacity: [0, 1],
+                translateY: [-20, 0],
+                duration: 1000,
+                easing: 'easeOutCubic',
+                delay: 200
+            });
+
+            // Fade in and scale the logo
+            anime({
+                targets: '.logo',
+                opacity: [0, 1],
+                scale: [0.8, 1],
+                duration: 1200,
+                easing: 'easeOutElastic(1, .8)',
+                delay: 400
+            });
+
+            // Slide in and fade title/subtitle
+            anime({
+                targets: '.title-subtitle',
+                opacity: [0, 1],
+                translateY: [30, 0],
+                duration: 1000,
+                easing: 'easeOutCubic',
+                delay: 700
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+{
+  "mcpServers": {
+    "campus-resource-hub": {
+      "command": "python",
+      "args": ["-m", "mcp_server"],
+      "env": {
+        "PROJECT_ROOT": "${workspaceFolder}",
+        "FLASK_ENV": "development"
+      }
+    }
+  },
+  "contextProviders": {
+    "project": {
+      "type": "filesystem",
+      "include": [
+        "src/**/*.py",
+        "src/templates/**/*.html",
+        "src/static/**/*.css",
+        "src/static/**/*.js",
+        "config.py",
+        "requirements.txt",
+        "README.md",
+        "PROJECT_STRUCTURE.md"
+      ],
+      "exclude": [
+        "**/__pycache__/**",
+        "**/venv/**",
+        "**/node_modules/**",
+        "**/.git/**",
+        "*.pyc",
+        "*.log"
+      ]
+    },
+    "database": {
+      "type": "schema",
+      "schemaFile": "database/schema.sql"
+    },
+    "documentation": {
+      "type": "markdown",
+      "files": [
+        "README.md",
+        "PROJECT_STRUCTURE.md",
+        "docs/**/*.md"
+      ]
+    }
+  },
+  "projectMetadata": {
+    "name": "Campus Resource Hub",
+    "version": "1.0.0",
+    "description": "Flask-based campus resource booking and management system",
+    "architecture": "MVC with Data Access Layer (DAL)",
+    "framework": "Flask 3.0.0",
+    "database": "SQLite3",
+    "security": [
+      "CSRF Protection (Flask-WTF)",
+      "Password Hashing (bcrypt)",
+      "Session Management (Flask-Login)",
+      "XSS Protection (bleach)",
+      "SQL Injection Prevention (parameterized queries)"
+    ],
+    "features": {
+      "authentication": {
+        "status": "implemented",
+        "files": [
+          "src/controllers/auth_controller.py",
+          "src/data_access/user_dal.py",
+          "src/models/user.py",
+          "src/templates/auth/login.html",
+          "src/templates/auth/register.html"
+        ]
+      },
+      "resources": {
+        "status": "partial",
+        "files": [
+          "src/models/resource.py",
+          "src/data_access/resource_dal.py"
+        ],
+        "todo": [
+          "Complete resource_controller.py",
+          "Create resource view templates"
+        ]
+      },
+      "bookings": {
+        "status": "planned",
+        "files": [
+          "src/models/booking.py"
+        ],
+        "todo": [
+          "Create BookingDAL with conflict detection",
+          "Create booking_controller.py",
+          "Add calendar view templates"
+        ]
+      },
+      "messaging": {
+        "status": "planned",
+        "files": [
+          "src/models/message.py"
+        ],
+        "todo": [
+          "Create MessageDAL",
+          "Implement notification system"
+        ]
+      },
+      "reviews": {
+        "status": "planned",
+        "files": [
+          "src/models/review.py"
+        ],
+        "todo": [
+          "Create ReviewDAL",
+          "Add content moderation"
+        ]
+      }
+    }
+  },
+  "codePatterns": {
+    "controllers": {
+      "pattern": "Blueprint-based routing",
+      "location": "src/controllers/",
+      "naming": "*_controller.py",
+      "conventions": [
+        "Use Flask Blueprints for route organization",
+        "Return render_template() for views",
+        "Use flash() for user messages",
+        "Validate all user input",
+        "Handle errors gracefully with try/except"
+      ]
+    },
+    "models": {
+      "pattern": "Plain Python classes",
+      "location": "src/models/",
+      "naming": "*.py (singular)",
+      "conventions": [
+        "Models are data containers, not active records",
+        "Include __init__, __repr__, to_dict methods",
+        "No database operations in models"
+      ]
+    },
+    "dal": {
+      "pattern": "Data Access Layer with static methods",
+      "location": "src/data_access/",
+      "naming": "*_dal.py",
+      "conventions": [
+        "All database operations go through DAL",
+        "Use parameterized queries to prevent SQL injection",
+        "Return dictionaries or lists of dictionaries",
+        "Include error handling and logging",
+        "Extend BaseDal for common operations"
+      ]
+    },
+    "templates": {
+      "pattern": "Jinja2 templates with template inheritance",
+      "location": "src/templates/",
+      "structure": "organized by feature (auth/, resources/, bookings/)",
+      "conventions": [
+        "Extend base.html for consistency",
+        "Use url_for() for all internal links",
+        "Include CSRF tokens in all forms",
+        "Separate inline styles to external CSS"
+      ]
+    }
+  },
+  "testingGuidelines": {
+    "framework": "pytest",
+    "coverage": "aim for 80%+ coverage",
+    "priorities": [
+      "Authentication flows (login, register, logout)",
+      "Booking conflict detection",
+      "Payment processing",
+      "Access control (role-based permissions)"
+    ]
+  }
+}
