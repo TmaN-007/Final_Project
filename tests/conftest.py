@@ -48,27 +48,43 @@ def client(app):
     return app.test_client()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='function', autouse=True)
 def db_connection():
     """
     Provide database connection for testing.
 
-    Automatically rolls back changes after each test.
+    Automatically cleans database before each test.
+    Uses autouse=True so it runs for every test automatically.
 
     Usage:
-        def test_user_creation(db_connection):
-            # Database operations here
+        def test_user_creation():
+            # Database operations here - fresh database guaranteed
             pass
     """
-    # Set test database path
-    BaseDAL.set_db_path(':memory:')
+    # Clean all test data from database before each test
+    import sqlite3
+    db_path = BaseDAL.get_db_path()
 
-    # TODO: Initialize test database schema
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        # Delete all test data (keep schema)
+        cursor.execute("DELETE FROM bookings")
+        cursor.execute("DELETE FROM messages")
+        cursor.execute("DELETE FROM reviews")
+        cursor.execute("DELETE FROM resources")
+        cursor.execute("DELETE FROM users")
+
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        # Database might not exist yet or tables might not be created
+        pass
 
     yield
 
-    # Cleanup after test
-    # (In-memory database automatically cleaned up)
+    # Cleanup after test (optional - next test will clean anyway)
 
 
 @pytest.fixture

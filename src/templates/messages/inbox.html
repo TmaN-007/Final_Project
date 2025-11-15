@@ -587,7 +587,7 @@
                 <div class="messages-area" id="messagesArea">
                     {% if messages %}
                         {% for message in messages %}
-                            <div class="message-bubble {% if message.sender_id == current_user.user_id %}sent{% elif message.sender_id == 0 %}system{% else %}received{% endif %}">
+                            <div class="message-bubble {% if message.sender_id == current_user.user_id %}sent{% elif message.sender_id == 0 %}system{% else %}received{% endif %}" data-message-id="{{ message.message_id }}">
                                 <div class="message-content">
                                     {% if message.sender_id != current_user.user_id and message.sender_id != 0 %}
                                         <div class="message-sender">{{ message._sender_name or 'Unknown User' }}</div>
@@ -652,6 +652,13 @@
 const messageInput = document.getElementById('messageInput');
 const sendButton = document.getElementById('sendButton');
 const messagesArea = document.getElementById('messagesArea');
+const messageForm = document.getElementById('messageForm');
+
+// Prevent form from submitting traditionally - only use AJAX
+messageForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    sendMessageAjax();
+});
 
 // Auto-resize textarea
 messageInput.addEventListener('input', function() {
@@ -699,6 +706,9 @@ function sendMessageAjax() {
             // Clear input
             messageInput.value = '';
             messageInput.style.height = 'auto';
+
+            // Add message ID to known messages to prevent duplication
+            knownMessageIds.add(data.message.message_id);
 
             // Create and append new message bubble
             const messageHtml = createMessageBubble(data.message);
@@ -769,22 +779,67 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     sendMessageAjax();
 });
 
-// Auto-refresh for new messages every 10 seconds
-let lastMessageCount = {{ messages|length }};
-setInterval(function() {
-    fetch('{{ url_for("message.inbox", thread_id=active_thread.thread_id) }}')
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const newMessages = doc.querySelectorAll('.message-bubble');
+// Real-time message updates using API (no page reload)
+let knownMessageIds = new Set();
 
-            if (newMessages.length > lastMessageCount) {
-                location.reload();
+// Initialize with existing messages from DOM using actual message IDs
+document.querySelectorAll('[data-message-id]').forEach((bubble) => {
+    const messageId = bubble.getAttribute('data-message-id');
+    if (messageId) {
+        knownMessageIds.add(parseInt(messageId));
+    }
+});
+
+// Poll for new messages every 3 seconds
+setInterval(function() {
+    fetch('{{ url_for("message.api_messages", thread_id=active_thread.thread_id) }}')
+        .then(response => response.json())
+        .then(data => {
+            const messagesArea = document.getElementById('messagesArea');
+            const currentUserId = {{ current_user.user_id }};
+            let hasNewMessages = false;
+
+            data.messages.forEach(message => {
+                // Skip if we already have this message
+                if (knownMessageIds.has(message.message_id)) {
+                    return;
+                }
+
+                // Add new message to the chat
+                knownMessageIds.add(message.message_id);
+                hasNewMessages = true;
+
+                const localTime = window.formatLocalTime(message.sent_at, { timeOnly: true });
+                const isOwn = message.sender_id === currentUserId;
+                const isSystem = message.is_system;
+
+                let bubbleClass = isOwn ? 'sent' : (isSystem ? 'system' : 'received');
+                let senderLabel = '';
+
+                if (!isOwn && !isSystem && message.sender_name) {
+                    senderLabel = `<div class="message-sender">${escapeHtml(message.sender_name)}</div>`;
+                }
+
+                const messageHtml = `
+                    <div class="message-bubble ${bubbleClass}" data-message-id="${message.message_id}">
+                        <div class="message-content">
+                            ${senderLabel}
+                            <div class="message-text">${escapeHtml(message.content)}</div>
+                            <div class="message-time">${localTime}</div>
+                        </div>
+                    </div>
+                `;
+
+                messagesArea.insertAdjacentHTML('beforeend', messageHtml);
+            });
+
+            // Auto-scroll to bottom if new messages arrived
+            if (hasNewMessages) {
+                messagesArea.scrollTop = messagesArea.scrollHeight;
             }
         })
-        .catch(error => console.log('Failed to check for new messages'));
-}, 10000);
+        .catch(error => console.log('Failed to check for new messages:', error));
+}, 3000);
 {% endif %}
 </script>
 {% endblock %}

@@ -166,7 +166,7 @@ def send_message():
                     'message_id': message_id,
                     'content': content,
                     'sender_id': current_user.user_id,
-                    'sent_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    'sent_at': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
                 }
             })
         flash('Message sent successfully.', 'success')
