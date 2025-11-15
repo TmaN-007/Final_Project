@@ -427,74 +427,124 @@ const slotCounts = {
     'sunday': 1
 };
 
-// Pre-populate form with existing availability rules if in edit mode
-{% if edit_mode and existing_rules %}
-const existingRules = {{ existing_rules | tojson }};
+// Initialize form on page load
+document.addEventListener('DOMContentLoaded', function() {
+    {% if edit_mode and existing_rules %}
+    // EDIT MODE: Pre-populate form with existing availability rules
+    const existingRules = {{ existing_rules | tojson }};
 
-// Populate booking duration fields
-if (existingRules.booking_duration_min) {
-    document.querySelector('input[name="min_duration"]').value = existingRules.booking_duration_min;
-}
-if (existingRules.booking_duration_max) {
-    document.querySelector('input[name="max_duration"]').value = existingRules.booking_duration_max;
-}
-if (existingRules.advance_booking_days) {
-    document.querySelector('input[name="advance_days"]').value = existingRules.advance_booking_days;
-}
-if (existingRules.buffer_time_minutes !== undefined) {
-    document.querySelector('input[name="buffer_time"]').value = existingRules.buffer_time_minutes;
-}
+    // Populate booking duration fields
+    if (existingRules.booking_duration_min) {
+        document.querySelector('input[name="min_duration"]').value = existingRules.booking_duration_min;
+    }
+    if (existingRules.booking_duration_max) {
+        document.querySelector('input[name="max_duration"]').value = existingRules.booking_duration_max;
+    }
+    if (existingRules.advance_booking_days) {
+        document.querySelector('input[name="advance_days"]').value = existingRules.advance_booking_days;
+    }
+    if (existingRules.buffer_time_minutes !== undefined) {
+        document.querySelector('input[name="buffer_time"]').value = existingRules.buffer_time_minutes;
+    }
 
-// Populate weekly schedule
-if (existingRules.weekly_schedule) {
-    // First, uncheck all days and clear default slots
+    // Populate weekly schedule
+    if (existingRules.weekly_schedule) {
+        // First, uncheck all days and clear default slots
+        const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        allDays.forEach(day => {
+            const checkbox = document.getElementById(`${day}-enabled`);
+            const slotsContainer = document.getElementById(`${day}-slots`);
+            const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
+
+            // Uncheck and hide
+            checkbox.checked = false;
+            slotsContainer.style.display = 'none';
+            addButton.style.display = 'none';
+
+            // Clear existing slots
+            slotsContainer.innerHTML = '';
+            slotCounts[day] = 0;
+        });
+
+        // Now populate with existing schedule
+        existingRules.weekly_schedule.forEach(daySchedule => {
+            const day = daySchedule.day.toLowerCase();
+            const checkbox = document.getElementById(`${day}-enabled`);
+            const slotsContainer = document.getElementById(`${day}-slots`);
+            const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
+
+            // Enable the day
+            checkbox.checked = true;
+            slotsContainer.style.display = 'block';
+            addButton.style.display = 'inline-block';
+
+            // Add time slots
+            daySchedule.slots.forEach((slot, index) => {
+                slotCounts[day]++;
+                const slotNumber = slotCounts[day];
+
+                const slotDiv = document.createElement('div');
+                slotDiv.className = 'time-slot';
+                slotDiv.innerHTML = `
+                    <input type="time" name="${day}_start_${slotNumber}" class="form-control" value="${slot.start_time}" data-day="${day}">
+                    <span style="color: var(--text-tertiary);">to</span>
+                    <input type="time" name="${day}_end_${slotNumber}" class="form-control" value="${slot.end_time}" data-day="${day}">
+                    <button type="button" class="btn-remove-slot" onclick="removeTimeSlot(this)" ${index === 0 ? 'style="visibility: hidden;"' : ''}>Remove</button>
+                `;
+
+                slotsContainer.appendChild(slotDiv);
+            });
+        });
+    }
+    {% else %}
+    // CREATE MODE: Show default 9 AM - 5 PM on weekdays (the HTML already has these defaults in place)
+    // Just ensure all days are properly visible
     const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
     allDays.forEach(day => {
         const checkbox = document.getElementById(`${day}-enabled`);
         const slotsContainer = document.getElementById(`${day}-slots`);
         const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
 
-        // Uncheck and hide
-        checkbox.checked = false;
-        slotsContainer.style.display = 'none';
-        addButton.style.display = 'none';
-
-        // Clear existing slots
-        slotsContainer.innerHTML = '';
-        slotCounts[day] = 0;
+        // All days are checked by default in HTML, so just ensure visibility matches
+        if (checkbox.checked) {
+            slotsContainer.style.display = 'block';
+            addButton.style.display = 'inline-block';
+        } else {
+            slotsContainer.style.display = 'none';
+            addButton.style.display = 'none';
+        }
     });
+    {% endif %}
 
-    // Now populate with existing schedule
-    existingRules.weekly_schedule.forEach(daySchedule => {
-        const day = daySchedule.day.toLowerCase();
-        const checkbox = document.getElementById(`${day}-enabled`);
-        const slotsContainer = document.getElementById(`${day}-slots`);
-        const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
-
-        // Enable the day
-        checkbox.checked = true;
-        slotsContainer.style.display = 'block';
-        addButton.style.display = 'inline-block';
-
-        // Add time slots
-        daySchedule.slots.forEach((slot, index) => {
-            slotCounts[day]++;
-            const slotNumber = slotCounts[day];
-
-            const slotDiv = document.createElement('div');
-            slotDiv.className = 'time-slot';
-            slotDiv.innerHTML = `
-                <input type="time" name="${day}_start_${slotNumber}" class="form-control" value="${slot.start_time}" data-day="${day}">
-                <span style="color: var(--text-tertiary);">to</span>
-                <input type="time" name="${day}_end_${slotNumber}" class="form-control" value="${slot.end_time}" data-day="${day}">
-                <button type="button" class="btn-remove-slot" onclick="removeTimeSlot(this)" ${index === 0 ? 'style="visibility: hidden;"' : ''}>Remove</button>
-            `;
-
-            slotsContainer.appendChild(slotDiv);
+    // Add validation listeners to all existing time inputs
+    document.querySelectorAll('.time-slot input[type="time"]').forEach(input => {
+        input.addEventListener('change', function() {
+            // Round to nearest 30 minutes first
+            if (this.value) {
+                this.value = roundToNearest30(this.value);
+            }
+            // Then validate
+            validateTimeSlot(this);
         });
     });
-}
-{% endif %}
+
+    // Enable/disable time slots based on checkbox
+    document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const day = this.id.replace('-enabled', '');
+            const slots = document.getElementById(`${day}-slots`);
+            const addButton = slots.parentElement.querySelector('.btn-add-slot');
+
+            if (this.checked) {
+                slots.style.display = 'block';
+                addButton.style.display = 'inline-block';
+            } else {
+                slots.style.display = 'none';
+                addButton.style.display = 'none';
+            }
+        });
+    });
+});
 
 // Get the minimum duration from the form
 function getMinDuration() {
@@ -513,6 +563,31 @@ function minutesToTime(minutes) {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+// Round time to nearest 30-minute interval
+function roundToNearest30(timeStr) {
+    if (!timeStr) return timeStr;
+
+    const minutes = timeToMinutes(timeStr);
+    const remainder = minutes % 30;
+
+    // Round to nearest 30 minutes
+    let roundedMinutes;
+    if (remainder < 15) {
+        // Round down
+        roundedMinutes = minutes - remainder;
+    } else {
+        // Round up
+        roundedMinutes = minutes + (30 - remainder);
+    }
+
+    // Ensure it doesn't exceed 24 hours
+    if (roundedMinutes >= 24 * 60) {
+        roundedMinutes = 23 * 60 + 30; // 23:30
+    }
+
+    return minutesToTime(roundedMinutes);
 }
 
 // Get the last end time for a given day
@@ -571,10 +646,20 @@ function addTimeSlot(day) {
     const endInput = slotDiv.querySelector('input[type="time"]:last-of-type');
 
     startInput.addEventListener('change', function() {
+        // Round to nearest 30 minutes first
+        if (this.value) {
+            this.value = roundToNearest30(this.value);
+        }
+        // Then validate
         validateTimeSlot(this);
     });
 
     endInput.addEventListener('change', function() {
+        // Round to nearest 30 minutes first
+        if (this.value) {
+            this.value = roundToNearest30(this.value);
+        }
+        // Then validate
         validateTimeSlot(this);
     });
 }
@@ -599,32 +684,6 @@ function validateTimeSlot(input) {
         endInput.value = minutesToTime(startMinutes + minDuration);
     }
 }
-
-// Enable/disable time slots based on checkbox
-document.querySelectorAll('.day-checkbox').forEach(checkbox => {
-    checkbox.addEventListener('change', function() {
-        const day = this.id.replace('-enabled', '');
-        const slots = document.getElementById(`${day}-slots`);
-        const addButton = slots.parentElement.querySelector('.btn-add-slot');
-
-        if (this.checked) {
-            slots.style.display = 'block';
-            addButton.style.display = 'inline-block';
-        } else {
-            slots.style.display = 'none';
-            addButton.style.display = 'none';
-        }
-    });
-});
-
-// Add validation to all existing time inputs
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelectorAll('.time-slot input[type="time"]').forEach(input => {
-        input.addEventListener('change', function() {
-            validateTimeSlot(this);
-        });
-    });
-});
 
 // Store slot counts before form submission
 document.getElementById('availability-form').addEventListener('submit', function(e) {

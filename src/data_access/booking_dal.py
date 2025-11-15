@@ -953,17 +953,17 @@ class BookingDAL(BaseDAL):
     @classmethod
     def cancel_bookings_by_resource(cls, resource_id: int) -> int:
         """
-        Cancel all active (pending and approved) bookings for a specific resource.
+        Delete all active (pending and approved) bookings for a specific resource.
         Used when a resource is archived or deleted.
         Sends system notifications to affected users.
 
         Args:
-            resource_id: Resource ID whose bookings should be cancelled
+            resource_id: Resource ID whose bookings should be deleted
 
         Returns:
-            int: Number of bookings cancelled
+            int: Number of bookings deleted
         """
-        # First, get affected bookings grouped by user
+        # First, get affected bookings grouped by user for notifications
         select_query = """
             SELECT b.requester_id, COUNT(*) as booking_count, r.title as resource_title
             FROM bookings b
@@ -974,15 +974,14 @@ class BookingDAL(BaseDAL):
         """
         affected_users = cls.execute_query(select_query, (resource_id,))
 
-        # Cancel the bookings
-        update_query = """
-            UPDATE bookings
-            SET status = 'cancelled',
-                updated_at = CURRENT_TIMESTAMP
+        # Delete ALL bookings for this resource (not just active ones)
+        # This is necessary because the bookings table has ON DELETE RESTRICT on resource_id
+        # We must delete ALL booking records, including completed and cancelled ones
+        delete_query = """
+            DELETE FROM bookings
             WHERE resource_id = ?
-              AND status IN ('pending', 'approved')
         """
-        rows_affected = cls.execute_update(update_query, (resource_id,))
+        rows_affected = cls.execute_update(delete_query, (resource_id,))
 
         # Send system notifications to affected users
         if affected_users:
@@ -996,9 +995,9 @@ class BookingDAL(BaseDAL):
                             affected_bookings_count=user_data['booking_count']
                         )
                     except Exception as e:
-                        print(f"Failed to send archival notification to user {user_data['requester_id']}: {e}")
+                        logger.error(f"Failed to send archival notification to user {user_data['requester_id']}: {e}")
             except Exception as e:
-                print(f"Failed to import system_messaging: {e}")
+                logger.error(f"Failed to import system_messaging: {e}")
 
         return rows_affected
 

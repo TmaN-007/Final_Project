@@ -117,3 +117,8 @@ desktop.ini
 # AI Prompt Notes (Optional - team decision)
 # ============================================================
 # .prompt/dev_notes.md  # Uncomment if you want to keep private
+
+# ============================================================
+# Claude Code
+# ============================================================
+.claude/

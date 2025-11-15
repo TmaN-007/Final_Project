@@ -49,24 +49,35 @@ def client(app):
 
 
 @pytest.fixture(scope='function', autouse=True)
-def db_connection():
+def db_connection(app):
     """
     Provide database connection for testing.
 
-    Automatically cleans database before each test.
+    Automatically cleans TEST database before each test.
     Uses autouse=True so it runs for every test automatically.
+
+    IMPORTANT: This fixture now uses the test database path from TestingConfig,
+    NOT the production database. This ensures tests don't affect real user data.
 
     Usage:
         def test_user_creation():
             # Database operations here - fresh database guaranteed
             pass
     """
-    # Clean all test data from database before each test
+    # Get test database path from app config (NOT production database)
     import sqlite3
-    db_path = BaseDAL.get_db_path()
+    import os
+    from pathlib import Path
+
+    # Use a dedicated test database file
+    test_db_path = os.path.join(Path(__file__).parent.parent, 'test_campus_resource_hub.db')
+
+    # Override the BaseDAL database path for testing
+    original_db_path = BaseDAL._db_path
+    BaseDAL._db_path = test_db_path
 
     try:
-        conn = sqlite3.connect(db_path)
+        conn = sqlite3.connect(test_db_path)
         cursor = conn.cursor()
 
         # Delete all test data (keep schema)
@@ -84,7 +95,8 @@ def db_connection():
 
     yield
 
-    # Cleanup after test (optional - next test will clean anyway)
+    # Restore original database path after test
+    BaseDAL._db_path = original_db_path
 
 
 @pytest.fixture

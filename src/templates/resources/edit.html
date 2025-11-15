@@ -264,9 +264,22 @@
 
                 <!-- Location -->
                 <div class="form-group">
-                    <label class="form-label required">Location</label>
-                    <input type="text" name="location" class="form-control" value="{{ resource.location }}" required>
-                    <div class="form-help">Provide the physical location or online meeting link</div>
+                    <label class="form-label required">Building</label>
+                    <select name="location" class="form-select" required>
+                        <option value="">Select a building...</option>
+                        <option value="Library" {% if location == 'Library' %}selected{% endif %}>Library</option>
+                        <option value="Engineering" {% if location == 'Engineering' %}selected{% endif %}>Engineering Building</option>
+                        <option value="Student Union" {% if location == 'Student Union' %}selected{% endif %}>Student Union</option>
+                        <option value="Business School" {% if location == 'Business School' %}selected{% endif %}>Business School</option>
+                        <option value="Science Hall" {% if location == 'Science Hall' %}selected{% endif %}>Science Hall</option>
+                    </select>
+                </div>
+
+                <!-- Location Details -->
+                <div class="form-group">
+                    <label class="form-label">Specific Location</label>
+                    <input type="text" name="location_details" class="form-control" value="{{ location_details }}" placeholder="e.g., 2nd Floor, Room 201">
+                    <div class="form-help">Add floor, room number, or other location details</div>
                 </div>
 
                 <!-- Current Image -->

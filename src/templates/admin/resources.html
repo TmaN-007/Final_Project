@@ -296,7 +296,7 @@
 
     <!-- Filters -->
     <div class="filters-section">
-        <form method="GET" action="{{ url_for('admin.resources') }}">
+        <form method="GET" action="{{ url_for('admin.resources') }}" id="filterForm">
             <div class="filters-grid">
                 <div class="filter-group">
                     <label for="search">Search Title</label>
@@ -310,7 +310,7 @@
                 </div>
                 <div class="filter-group">
                     <label for="category">Category</label>
-                    <select id="category" name="category" class="filter-select">
+                    <select id="category" name="category" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                         <option value="">All Categories</option>
                         {% for cat in categories %}
                         <option value="{{ cat.name }}" {% if request.args.get('category') == cat.name %}selected{% endif %}>{{ cat.name }}</option>
@@ -319,7 +319,7 @@
                 </div>
                 <div class="filter-group">
                     <label for="status">Status</label>
-                    <select id="status" name="status" class="filter-select">
+                    <select id="status" name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                         <option value="">All Statuses</option>
                         <option value="published" {% if request.args.get('status') == 'published' %}selected{% endif %}>Published</option>
                         <option value="draft" {% if request.args.get('status') == 'draft' %}selected{% endif %}>Draft</option>
@@ -327,14 +327,28 @@
                     </select>
                 </div>
                 <div class="filter-group">
-                    <button type="submit" class="filter-button">Apply Filters</button>
-                </div>
-                <div class="filter-group">
                     <a href="{{ url_for('admin.resources') }}" class="clear-button">Clear</a>
                 </div>
             </div>
         </form>
     </div>
+
+    <script>
+    // Submit search on Enter key press for both search fields
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filterForm').submit();
+        }
+    });
+
+    document.getElementById('owner').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filterForm').submit();
+        }
+    });
+    </script>
 
     <!-- Resources Table -->
     <div class="resources-table-container">

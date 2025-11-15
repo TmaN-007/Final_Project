@@ -30,8 +30,10 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
 
     # Database Configuration
-    DATABASE_URL = os.environ.get('DATABASE_URL') or f'sqlite:///{BASE_DIR}/campus_resource_hub.db'
-    DATABASE_PATH = os.path.join(BASE_DIR, 'campus_resource_hub.db')
+    # Allow DATABASE env variable to override the database file (useful for testing)
+    DATABASE_FILE = os.environ.get('DATABASE', 'campus_resource_hub.db')
+    DATABASE_URL = os.environ.get('DATABASE_URL') or f'sqlite:///{BASE_DIR}/{DATABASE_FILE}'
+    DATABASE_PATH = os.path.join(BASE_DIR, DATABASE_FILE)
 
     # Security Settings
     SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true'

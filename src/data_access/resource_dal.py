@@ -269,6 +269,76 @@ class ResourceDAL(BaseDAL):
         return cls.execute_query(query, tuple(params))
 
     @classmethod
+    def count_search_resources(
+        cls,
+        search_query: Optional[str] = None,
+        category_id: Optional[int] = None,
+        location: Optional[str] = None,
+        min_capacity: Optional[int] = None,
+        availability_mode: Optional[str] = None,
+        availability_date: Optional[str] = None,
+        availability_time: Optional[str] = None
+    ) -> int:
+        """
+        Count resources matching search criteria.
+        Uses same filters as search_resources() but returns count instead of results.
+
+        Args:
+            search_query: Search term for title/description
+            category_id: Filter by category
+            location: Filter by location (partial match)
+            min_capacity: Minimum capacity required
+            availability_mode: Filter by availability mode
+            availability_date: Check availability on date (YYYY-MM-DD)
+            availability_time: Check availability at time (HH:MM)
+
+        Returns:
+            int: Total count of matching resources
+        """
+        query = """
+            SELECT COUNT(DISTINCT r.resource_id) as count
+            FROM resources r
+            WHERE r.status = 'published'
+        """
+        params = []
+
+        if search_query:
+            query += " AND (r.title LIKE ? OR r.description LIKE ?)"
+            search_pattern = f'%{search_query}%'
+            params.extend([search_pattern, search_pattern])
+
+        if category_id:
+            query += " AND r.category_id = ?"
+            params.append(category_id)
+
+        if location:
+            query += " AND r.location LIKE ?"
+            params.append(f'%{location}%')
+
+        if min_capacity:
+            query += " AND r.capacity >= ?"
+            params.append(min_capacity)
+
+        if availability_mode:
+            query += " AND r.availability_mode = ?"
+            params.append(availability_mode)
+
+        if availability_date and availability_time:
+            datetime_str = f"{availability_date} {availability_time}:00"
+            query += """
+                AND r.resource_id NOT IN (
+                    SELECT b.resource_id
+                    FROM bookings b
+                    WHERE b.status IN ('confirmed', 'pending')
+                    AND ? BETWEEN b.start_datetime AND b.end_datetime
+                )
+            """
+            params.append(datetime_str)
+
+        results = cls.execute_query(query, tuple(params))
+        return results[0]['count'] if results else 0
+
+    @classmethod
     def update_resource(
         cls,
         resource_id: int,
@@ -349,20 +419,6 @@ class ResourceDAL(BaseDAL):
         """
 
         return cls.execute_update(query, tuple(params))
-
-    @classmethod
-    def delete_resource(cls, resource_id: int) -> int:
-        """
-        Delete a resource (CASCADE will delete related records).
-
-        Args:
-            resource_id: Resource ID
-
-        Returns:
-            Number of rows affected
-        """
-        query = "DELETE FROM resources WHERE resource_id = ?"
-        return cls.execute_update(query, (resource_id,))
 
     # ===== RESOURCE CATEGORIES =====
 
@@ -662,7 +718,7 @@ class ResourceDAL(BaseDAL):
     def delete_resource(cls, resource_id: int) -> bool:
         """
         Delete a resource (admin only).
-        Also deletes associated images, availability rules, and bookings.
+        Also deletes all associated records from related tables.
 
         Args:
             resource_id: Resource ID
@@ -672,21 +728,44 @@ class ResourceDAL(BaseDAL):
         """
         try:
             # Delete in order to respect foreign key constraints
-            # 1. Delete resource images
-            cls.execute_update("DELETE FROM resource_images WHERE resource_id = ?", (resource_id,))
+            # Since foreign keys are disabled, we must manually delete from all related tables
 
-            # 2. Delete availability rules
-            cls.execute_update("DELETE FROM availability_rules WHERE resource_id = ?", (resource_id,))
+            # 1. Delete reviews (references bookings and resources)
+            cls.execute_update("DELETE FROM reviews WHERE resource_id = ?", (resource_id,))
 
-            # 3. Delete bookings (this will cascade to reviews if set up)
+            # 2. Delete bookings (other tables reference this)
             cls.execute_update("DELETE FROM bookings WHERE resource_id = ?", (resource_id,))
 
-            # 4. Finally delete the resource
+            # 3. Delete booking waitlist
+            cls.execute_update("DELETE FROM booking_waitlist WHERE resource_id = ?", (resource_id,))
+
+            # 4. Delete resource images
+            cls.execute_update("DELETE FROM resource_images WHERE resource_id = ?", (resource_id,))
+
+            # 5. Delete resource equipment
+            cls.execute_update("DELETE FROM resource_equipment WHERE resource_id = ?", (resource_id,))
+
+            # 6. Delete resource availability rules (table)
+            cls.execute_update("DELETE FROM resource_availability_rules WHERE resource_id = ?", (resource_id,))
+
+            # 7. Delete resource unavailable slots
+            cls.execute_update("DELETE FROM resource_unavailable_slots WHERE resource_id = ?", (resource_id,))
+
+            # 8. Delete resource analytics
+            cls.execute_update("DELETE FROM resource_analytics WHERE resource_id = ?", (resource_id,))
+
+            # 9. Update message threads to set resource_id to NULL
+            cls.execute_update("UPDATE message_threads SET resource_id = NULL WHERE resource_id = ?", (resource_id,))
+
+            # 10. Update search analytics to set clicked_resource_id to NULL
+            cls.execute_update("UPDATE search_analytics SET clicked_resource_id = NULL WHERE clicked_resource_id = ?", (resource_id,))
+
+            # 11. Finally delete the resource itself
             rows_affected = cls.execute_update("DELETE FROM resources WHERE resource_id = ?", (resource_id,))
 
             return rows_affected > 0
         except Exception as e:
-            print(f"Error deleting resource: {str(e)}")
+            logger.error(f"Error deleting resource {resource_id}: {str(e)}", exc_info=True)
             return False
 
     @classmethod

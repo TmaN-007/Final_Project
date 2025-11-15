@@ -73,7 +73,17 @@ def index():
         # Get all categories for filter dropdown
         categories = ResourceDAL.get_all_categories()
 
-        # Always use search_resources for filtering and sorting
+        # Get total count for pagination FIRST (using same filters)
+        total_count = ResourceDAL.count_search_resources(
+            search_query=search_query if search_query else None,
+            category_id=category_id,
+            location=location if location else None,
+            min_capacity=min_capacity,
+            availability_date=availability_date if availability_date else None,
+            availability_time=availability_time if availability_time else None
+        )
+
+        # Then get paginated resources
         resources_data = ResourceDAL.search_resources(
             search_query=search_query if search_query else None,
             category_id=category_id,
@@ -88,9 +98,6 @@ def index():
 
         # Convert to Resource objects
         resources = [Resource(r) for r in resources_data]
-
-        # Get total count for pagination (simplified)
-        total_count = len(resources_data) if len(resources_data) < per_page else (page * per_page) + 1
 
         logger.info(f"Resource browse: query='{search_query}', category={category_id}, found {len(resources)} resources")
 
@@ -109,7 +116,7 @@ def index():
             page=page,
             per_page=per_page,
             total_count=total_count,
-            total_pages=(total_count // per_page) + 1
+            total_pages=max(1, (total_count + per_page - 1) // per_page)
         )
 
     except Exception as e:
@@ -325,9 +332,9 @@ def create():
         category_id = request.form.get('category_id', type=int)
         location = request.form.get('location', '').strip()
         location_details = request.form.get('location_details', '').strip()
-        # Combine location and details
+        # Combine location and details with dash separator
         if location_details:
-            location = f"{location}, {location_details}"
+            location = f"{location} - {location_details}"
         capacity = request.form.get('capacity', type=int)
         requires_approval = request.form.get('requires_approval') == 'on'
 
@@ -421,6 +428,34 @@ def configure_availability():
             if resource and resource.get('availability_rules'):
                 try:
                     existing_rules = json.loads(resource['availability_rules'])
+
+                    # Normalize weekly_schedule to array format if it's in object format
+                    # Old format: {"monday": [["09:00 AM", "05:00 PM"]], ...}
+                    # New format: [{day: "monday", slots: [{start_time: "09:00", end_time: "17:00"}]}]
+                    if existing_rules and 'weekly_schedule' in existing_rules:
+                        weekly_schedule = existing_rules['weekly_schedule']
+
+                        # Check if it's in old object format
+                        if isinstance(weekly_schedule, dict):
+                            # Convert to new array format
+                            normalized_schedule = []
+                            for day, slots in weekly_schedule.items():
+                                if slots and len(slots) > 0:  # Only include days with slots
+                                    day_slots = []
+                                    for slot in slots:
+                                        if isinstance(slot, list) and len(slot) == 2:
+                                            # Convert from ["09:00 AM", "05:00 PM"] to {start_time: "09:00", end_time: "17:00"}
+                                            day_slots.append({
+                                                'start_time': slot[0],
+                                                'end_time': slot[1]
+                                            })
+                                    if day_slots:
+                                        normalized_schedule.append({
+                                            'day': day,
+                                            'slots': day_slots
+                                        })
+                            existing_rules['weekly_schedule'] = normalized_schedule
+
                 except json.JSONDecodeError:
                     existing_rules = None
 
@@ -579,11 +614,21 @@ def edit(resource_id):
             # Get categories for dropdown
             categories = ResourceDAL.get_all_categories()
 
+            # Split location into building and location_details for the form
+            location = resource.location or ''
+            location_details = ''
+            if ' - ' in location:
+                parts = location.split(' - ', 1)
+                location = parts[0]
+                location_details = parts[1]
+
             return render_template(
                 'resources/edit.html',
                 title=f'Edit {resource.title}',
                 resource=resource,
-                categories=categories
+                categories=categories,
+                location=location,
+                location_details=location_details
             )
 
         # POST - Process form submission
@@ -592,9 +637,9 @@ def edit(resource_id):
         category_id = request.form.get('category_id', type=int)
         location = request.form.get('location', '').strip()
         location_details = request.form.get('location_details', '').strip()
-        # Combine location and details
+        # Combine location and details with dash separator
         if location_details:
-            location = f"{location}, {location_details}"
+            location = f"{location} - {location_details}"
         capacity = request.form.get('capacity', type=int)
         requires_approval = request.form.get('requires_approval') == 'on'
         status = request.form.get('status', 'published')
