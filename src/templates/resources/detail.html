@@ -1,0 +1,1672 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Resource Detail Page Styles */
+    .detail-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .detail-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .resource-header {
+        background: rgba(30, 30, 30, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(153, 9, 221, 0.3);
+        border-radius: 16px;
+        padding: 40px;
+        margin-bottom: 30px;
+    }
+
+    [data-theme="light"] .resource-header {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(153, 9, 221, 0.2);
+    }
+
+    .resource-hero {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+    }
+
+    .resource-image-large {
+        width: 400px;
+        height: 300px;
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.3), rgba(134, 70, 238, 0.3));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .resource-main-info {
+        flex: 1;
+    }
+
+    .resource-title-large {
+        font-family: 'Actor', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #fff;
+    }
+
+    [data-theme="light"] .resource-title-large {
+        color: #1a1a1a;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        font-family: 'Actor', sans-serif;
+        margin-bottom: 16px;
+    }
+
+    .status-badge.published {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .status-badge.draft {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    .status-badge.archived {
+        background: rgba(107, 114, 128, 0.2);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.5);
+    }
+
+    .resource-meta-large {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    [data-theme="light"] .resource-meta-large {
+        color: rgba(0, 0, 0, 0.6);
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .resource-description-full {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.8);
+        margin-top: 20px;
+    }
+
+    [data-theme="light"] .resource-description-full {
+        color: rgba(0, 0, 0, 0.7);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        margin-top: 30px;
+    }
+
+    .btn-primary-action {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary-action:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+
+    .btn-secondary-action {
+        background: rgba(63, 11, 147, 0.4);
+        border: 1px solid rgba(153, 9, 221, 0.5);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary-action:hover {
+        background: rgba(63, 11, 147, 0.6);
+        border-color: rgba(153, 9, 221, 0.8);
+        color: #fff;
+    }
+
+    .btn-danger-action {
+        background: rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #ef4444;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-danger-action:hover {
+        background: rgba(239, 68, 68, 0.3);
+        border-color: rgba(239, 68, 68, 0.7);
+    }
+
+    .info-section {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(153, 9, 221, 0.3);
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+
+    [data-theme="light"] .info-section {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(153, 9, 221, 0.2);
+    }
+
+    .section-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+
+    [data-theme="light"] .section-title {
+        color: #1a1a1a;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .info-item {
+        font-family: 'Actor', sans-serif;
+    }
+
+    .info-label {
+        font-size: 0.9rem;
+        color: rgba(153, 9, 221, 0.9);
+        margin-bottom: 4px;
+        font-weight: 500;
+    }
+
+    .info-value {
+        font-size: 1.1rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    [data-theme="light"] .info-value {
+        color: rgba(0, 0, 0, 0.8);
+    }
+
+    .placeholder-section {
+        background: rgba(153, 9, 221, 0.1);
+        border: 2px dashed rgba(153, 9, 221, 0.3);
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        font-family: 'Actor', sans-serif;
+    }
+
+    [data-theme="light"] .placeholder-section {
+        background: rgba(153, 9, 221, 0.05);
+        color: rgba(0, 0, 0, 0.5);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+        transform: translateX(-4px);
+    }
+
+    @media (max-width: 768px) {
+        .resource-hero {
+            flex-direction: column;
+        }
+
+        .resource-image-large {
+            width: 100%;
+        }
+
+        .resource-title-large {
+            font-size: 2rem;
+        }
+    }
+
+    /* Booking Form Styles */
+    .booking-form {
+        margin-top: 20px;
+    }
+
+    .booking-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    @media (max-width: 768px) {
+        .booking-form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group-booking {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .booking-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .booking-input, .booking-textarea {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .booking-input:focus, .booking-textarea:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .booking-textarea {
+        resize: vertical;
+    }
+
+    .booking-info-box {
+        background: rgba(251, 191, 36, 0.1);
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+        font-family: 'Actor', sans-serif;
+        color: #fbbf24;
+    }
+
+    [data-theme="light"] .booking-info-box {
+        background: rgba(251, 191, 36, 0.15);
+    }
+
+    .booking-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 24px;
+    }
+
+    .btn-book-submit {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-book-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    /* Visual Time Slot Calendar Styles */
+    .time-slot-btn {
+        background: rgba(153, 9, 221, 0.1);
+        border: 2px solid rgba(153, 9, 221, 0.3);
+        border-radius: 8px;
+        padding: 12px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+    }
+
+    .time-slot-btn:hover {
+        background: rgba(153, 9, 221, 0.2);
+        border-color: rgba(153, 9, 221, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .time-slot-btn.booked {
+        background: rgba(239, 68, 68, 0.1);
+        border-color: rgba(239, 68, 68, 0.3);
+        color: rgba(239, 68, 68, 0.7);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    .time-slot-btn.booked:hover {
+        transform: none;
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .time-slot-btn.selected {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border-color: rgba(153, 9, 221, 1);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .time-slot-btn.selected:hover {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.9), rgba(134, 70, 238, 0.9));
+    }
+
+    [data-theme="light"] .time-slot-btn {
+        background: rgba(153, 9, 221, 0.05);
+        border-color: rgba(153, 9, 221, 0.2);
+    }
+
+    [data-theme="light"] .time-slot-btn:hover {
+        background: rgba(153, 9, 221, 0.15);
+    }
+
+    [data-theme="light"] .time-slot-btn.booked {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: rgba(239, 68, 68, 0.2);
+        color: rgba(239, 68, 68, 0.8);
+    }
+
+    /* Grid Time Slot Styles */
+    .time-grid-table {
+        border-collapse: collapse;
+        width: 100%;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.85rem;
+    }
+
+    .time-grid-table th {
+        background: rgba(153, 9, 221, 0.1);
+        color: var(--text-primary);
+        padding: 8px;
+        text-align: center;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .time-grid-table td {
+        padding: 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: center;
+        position: relative;
+    }
+
+    .time-cell-container {
+        display: flex;
+        flex-direction: column;
+        height: 50px;
+    }
+
+    .time-grid-cell {
+        width: 100%;
+        flex: 1;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: none;
+        font-family: inherit;
+        font-size: inherit;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .time-grid-cell:last-child {
+        border-bottom: none;
+    }
+
+    .day-header {
+        background: rgba(153, 9, 221, 0.15);
+        font-weight: 600;
+        min-width: 80px;
+    }
+
+    .time-grid-cell.available {
+        background: #4ade80;
+        color: #064e3b;
+    }
+
+    .time-grid-cell.available:hover {
+        background: #22c55e;
+        transform: scale(1.05);
+    }
+
+    .time-grid-cell.booked {
+        background: #ef4444;
+        color: #fff;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+    .time-grid-cell.unavailable {
+        background: rgba(100, 100, 100, 0.3);
+        color: rgba(255, 255, 255, 0.3);
+        cursor: not-allowed;
+    }
+
+    .time-grid-cell.beyond-max {
+        background: rgba(251, 191, 36, 0.2);
+        color: rgba(251, 191, 36, 0.8);
+        cursor: not-allowed;
+    }
+
+    [data-theme="light"] .time-grid-cell.beyond-max {
+        background: rgba(251, 191, 36, 0.15);
+        color: rgba(217, 119, 6, 0.9);
+    }
+
+    .time-grid-cell.selected {
+        background: rgba(153, 9, 221, 0.8);
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .time-grid-cell.selected:hover {
+        background: rgba(153, 9, 221, 0.8);
+        transform: none;
+    }
+
+    .time-grid-cell.in-range {
+        background: rgba(153, 9, 221, 0.6);
+        color: #fff;
+    }
+
+    .time-grid-cell.in-range:hover {
+        background: rgba(153, 9, 221, 0.6);
+        transform: none;
+    }
+
+    [data-theme="light"] .time-grid-table th {
+        background: rgba(153, 9, 221, 0.08);
+    }
+
+    [data-theme="light"] .time-grid-cell.available {
+        background: #86efac;
+        color: #064e3b;
+    }
+
+    [data-theme="light"] .time-grid-cell.selected {
+        background: rgba(153, 9, 221, 0.7);
+    }
+
+    [data-theme="light"] .time-grid-cell.selected:hover {
+        background: rgba(153, 9, 221, 0.7);
+        transform: none;
+    }
+
+    [data-theme="light"] .time-grid-cell.in-range {
+        background: rgba(153, 9, 221, 0.5);
+    }
+
+    [data-theme="light"] .time-grid-cell.in-range:hover {
+        background: rgba(153, 9, 221, 0.5);
+        transform: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="detail-page">
+    <div class="detail-container">
+        <!-- Back Link -->
+        <a href="{{ url_for('resource.index') }}" class="back-link">
+            ← Back to Resources
+        </a>
+
+        <!-- Resource Header -->
+        <div class="resource-header">
+            <div class="resource-hero">
+                <div class="resource-image-large">
+                    {% if resource.images %}
+                        <img src="{{ resource.images }}" alt="{{ resource.title }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;">
+                    {% else %}
+                        <!-- Placeholder for resource image -->
+                        <span style="font-size: 4rem;">📦</span>
+                    {% endif %}
+                </div>
+
+                <div class="resource-main-info">
+                    <h1 class="resource-title-large">{{ resource.title }}</h1>
+
+                    <div class="status-badge {{ resource.status }}">
+                        {% if resource.status == 'published' %}
+                            ✓ Available
+                        {% elif resource.status == 'draft' %}
+                            ⚠ Draft
+                        {% elif resource.status == 'archived' %}
+                            🗄 Archived
+                        {% endif %}
+                    </div>
+
+                    <div class="resource-meta-large">
+                        <div class="meta-item">
+                            <span>📦</span>
+                            <span>{{ resource._category_name or 'Uncategorized' }}</span>
+                        </div>
+                        <div class="meta-item">
+                            <span>📍</span>
+                            <span>{{ resource.location }}</span>
+                        </div>
+                        {% if resource.capacity %}
+                        <div class="meta-item">
+                            {% if resource.category_id in [2, 3] %}
+                            {# Equipment (2) or Lab Instruments (3) - show available quantity #}
+                            <span>📦</span>
+                            {% if available_quantity is not none %}
+                            <span id="capacity-display">{{ available_quantity }} of {{ resource.capacity }} available</span>
+                            {% else %}
+                            <span id="capacity-display">{{ resource.capacity }} total</span>
+                            {% endif %}
+                            {% else %}
+                            {# Rooms/spaces - show people capacity #}
+                            <span>👥</span>
+                            <span>{{ resource.capacity }} people</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        {% if resource._avg_rating %}
+                        <div class="meta-item">
+                            <span>⭐</span>
+                            <span>{{ "%.1f"|format(resource._avg_rating) }} / 5.0</span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <p class="resource-description-full">{{ resource.description }}</p>
+
+                    <!-- Action Buttons -->
+                    <div class="action-buttons">
+                        {% if resource.status == 'published' %}
+                            {% if current_user.is_authenticated %}
+                                <a href="#booking-section" class="btn-primary-action" onclick="scrollToBooking(event)">📅 Book This Resource</a>
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="btn-primary-action">Login to Book</a>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if current_user.is_authenticated %}
+                            <!-- Contact Owner Button (only show if user is not the owner) -->
+                            {% if not (current_user.role == 'admin' or (resource.owner_type == 'user' and resource.owner_id == current_user.user_id)) %}
+                                {% if resource.owner_type == 'user' and resource.owner_id %}
+                                    <a href="{{ url_for('message.new_thread', recipient_id=resource.owner_id, resource_id=resource.resource_id) }}" class="btn-secondary-action">💬 Contact Owner</a>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if current_user.role == 'admin' or (resource.owner_type == 'user' and resource.owner_id == current_user.user_id) %}
+                                <a href="{{ url_for('resource.edit', resource_id=resource.resource_id) }}" class="btn-secondary-action">✏️ Edit</a>
+                                <form action="{{ url_for('resource.delete', resource_id=resource.resource_id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to archive this resource?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-danger-action">🗑 Archive</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Details -->
+        <div class="info-section">
+            <h2 class="section-title">Resource Details</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Availability Mode</div>
+                    <div class="info-value">{{ resource.availability_mode|title }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Requires Approval</div>
+                    <div class="info-value">{{ 'Yes' if resource.requires_approval else 'No' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Created</div>
+                    <div class="info-value">{{ resource.created_at[:10] if resource.created_at else 'N/A' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value">{{ resource.updated_at[:10] if resource.updated_at else 'N/A' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability Schedule Section -->
+        {% if resource.availability_rules %}
+        <div class="info-section">
+            <h2 class="section-title">⏰ Availability Schedule</h2>
+            <div id="availability-schedule-display"></div>
+        </div>
+        {% endif %}
+
+        <!-- Booking Section -->
+        {% if resource.status == 'published' and current_user.is_authenticated %}
+        <div class="info-section" id="booking-section">
+            <h2 class="section-title">📅 Book This Resource</h2>
+
+            <!-- Week Navigator -->
+            <div style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+                <button type="button" id="prev-week-btn" class="btn-secondary-action" style="padding: 8px 16px;">
+                    ← Previous Week
+                </button>
+                <div style="flex: 1; text-align: center;">
+                    <span id="week-range-display" style="font-family: 'Actor', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--text-primary);"></span>
+                </div>
+                <button type="button" id="next-week-btn" class="btn-secondary-action" style="padding: 8px 16px;">
+                    Next Week →
+                </button>
+            </div>
+
+            <!-- Legend -->
+            <div style="display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #4ade80; border: 1px solid #22c55e; border-radius: 4px;"></div>
+                    <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">Available</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: #ef4444; border: 1px solid #dc2626; border-radius: 4px;"></div>
+                    <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">Booked</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: rgba(153, 9, 221, 0.8); border: 1px solid rgba(153, 9, 221, 1); border-radius: 4px;"></div>
+                    <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">Selected Range</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: rgba(100, 100, 100, 0.3); border: 1px solid rgba(100, 100, 100, 0.4); border-radius: 4px;"></div>
+                    <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">Unavailable</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="width: 20px; height: 20px; background: rgba(251, 191, 36, 0.2); border: 1px solid rgba(251, 191, 36, 0.5); border-radius: 4px;"></div>
+                    <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">Beyond Max Duration</span>
+                </div>
+            </div>
+
+            <!-- Grid-based Time Slot Selector -->
+            <div id="time-grid-container" style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="font-family: 'Actor', sans-serif; font-size: 1.1rem; color: var(--text-primary); margin: 0;">Select Time Range</h3>
+                    <div id="loading-indicator" style="display: none; color: var(--accent-purple);">Loading...</div>
+                </div>
+
+                <!-- Time Grid Table -->
+                <div id="time-grid" style="overflow-x: auto;">
+                    <!-- Grid will be populated here -->
+                </div>
+
+                <div id="no-slots-message" style="display: none; padding: 30px; text-align: center; color: var(--text-quaternary); font-family: 'Actor', sans-serif;">
+                    No available time slots for this date.
+                </div>
+            </div>
+
+            <!-- Selected Slot Info and Form -->
+            <div id="booking-form-container" style="display: none;">
+                <div style="padding: 15px; background: rgba(153, 9, 221, 0.1); border-radius: 8px; margin-bottom: 20px;">
+                    <p style="margin: 0; font-family: 'Actor', sans-serif; color: var(--text-primary);">
+                        <strong>Selected Time:</strong> <span id="selected-time-display"></span>
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="booking-form" id="booking-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="start_datetime" id="start-datetime-hidden">
+                    <input type="hidden" name="end_datetime" id="end-datetime-hidden">
+
+                    <div class="form-group-booking">
+                        <label class="booking-label">Purpose / Notes (Optional)</label>
+                        <textarea name="purpose" class="booking-textarea" rows="3" placeholder="Briefly describe what you'll be using this resource for..."></textarea>
+                    </div>
+
+                    {% if resource.requires_approval %}
+                    <div class="booking-info-box">
+                        <strong>⚠️ Approval Required:</strong> This booking will need to be approved by the resource owner before confirmation.
+                    </div>
+                    {% endif %}
+
+                    <div class="booking-actions" style="gap: 12px;">
+                        <button type="button" class="btn-cancel" onclick="cancelSelection()" style="padding: 12px 24px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; color: #fff; font-family: 'Actor', sans-serif; font-weight: 500; font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease;">Cancel</button>
+                        <button type="submit" class="btn-book-submit" id="submit-booking-btn">
+                            {% if resource.requires_approval %}
+                                Submit Booking Request
+                            {% else %}
+                                Book Resource
+                            {% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% elif resource.status == 'published' %}
+        <div class="info-section" id="booking-section">
+            <h2 class="section-title">📅 Book This Resource</h2>
+            <div class="placeholder-section">
+                <p style="font-size: 1.2rem; margin-bottom: 8px;">Please log in to book this resource</p>
+                <a href="{{ url_for('auth.login') }}" class="btn-primary-action">Login</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Reviews Section -->
+        <div class="info-section" id="reviews-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 class="section-title" style="margin-bottom: 0;">Reviews & Ratings</h2>
+                {% if eligible_booking_id %}
+                    <!-- Write Review Button (shown if user has completed booking without review) -->
+                    <a href="{{ url_for('review.create', booking_id=eligible_booking_id) }}" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8)); border: none; border-radius: 8px; padding: 10px 20px; color: #fff; font-family: 'Actor', sans-serif; font-weight: 500; text-decoration: none; display: inline-block; transition: all 0.3s ease;">
+                        ✍️ Write Review
+                    </a>
+                {% endif %}
+            </div>
+
+            {% if rating_summary and rating_summary.total_reviews > 0 %}
+                <!-- Aggregate Rating Summary -->
+                <div style="background: rgba(153, 9, 221, 0.1); border-radius: 12px; padding: 30px; margin-bottom: 30px;">
+                    <div style="display: flex; gap: 40px; align-items: center; flex-wrap: wrap;">
+                        <!-- Average Rating Display -->
+                        <div style="text-align: center;">
+                            <div style="font-size: 4rem; font-weight: 700; color: var(--accent-purple); font-family: 'Actor', sans-serif;">
+                                {{ "%.1f"|format(rating_summary.avg_rating) }}
+                            </div>
+                            <div style="font-size: 1.8rem; color: #fbbf24; margin-top: -10px;">
+                                {{ "★" * (rating_summary.avg_rating|round|int) }}{{ "☆" * (5 - (rating_summary.avg_rating|round|int)) }}
+                            </div>
+                            <div style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); margin-top: 8px;">
+                                {{ rating_summary.total_reviews }} review{{ 's' if rating_summary.total_reviews != 1 else '' }}
+                            </div>
+
+                            <!-- Top-Rated Badge -->
+                            {% if rating_summary.avg_rating >= 4.5 and rating_summary.total_reviews >= 5 %}
+                            <div style="display: inline-block; margin-top: 12px; padding: 8px 16px; background: linear-gradient(135deg, #fbbf24, #f59e0b); border-radius: 20px; font-family: 'Actor', sans-serif; font-weight: 600; font-size: 0.9rem; color: #78350f;">
+                                ⭐ Top Rated
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Rating Distribution -->
+                        <div style="flex: 1; min-width: 250px;">
+                            {% for star in range(5, 0, -1) %}
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                <span style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); min-width: 60px;">{{ star }} star{{ 's' if star != 1 else '' }}</span>
+                                <div style="flex: 1; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+                                    {% set star_count = rating_summary['rating_' ~ star] or 0 %}
+                                    {% set percentage = (star_count / rating_summary.total_reviews * 100) if rating_summary.total_reviews > 0 else 0 %}
+                                    <div style="height: 100%; background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8)); width: {{ percentage }}%; transition: width 0.3s ease;"></div>
+                                </div>
+                                <span style="font-family: 'Actor', sans-serif; color: var(--text-quaternary); min-width: 30px; text-align: right; font-size: 0.9rem;">{{ star_count }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Reviews -->
+                <div style="display: flex; flex-direction: column; gap: 20px;">
+                    {% for review in reviews %}
+                    <div style="background: rgba(30, 30, 30, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(153, 9, 221, 0.2); border-radius: 12px; padding: 24px;" data-theme-aware>
+                        <!-- Review Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div>
+                                <div style="font-family: 'Actor', sans-serif; font-weight: 600; font-size: 1.1rem; color: var(--text-primary);">
+                                    {{ review.reviewer_name or 'Anonymous' }}
+                                </div>
+                                <div style="color: #fbbf24; font-size: 1.3rem; margin-top: 4px;">
+                                    {{ review.get_star_display() }}
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-family: 'Actor', sans-serif; color: var(--text-quaternary); font-size: 0.9rem;">
+                                    {{ review.get_time_ago() }}
+                                </div>
+                                {% if current_user.is_authenticated and review.reviewer_id == current_user.user_id %}
+                                <div style="margin-top: 8px; display: flex; gap: 8px; justify-content: flex-end;">
+                                    <a href="{{ url_for('review.edit', review_id=review.review_id) }}" style="font-family: 'Actor', sans-serif; color: var(--accent-purple); text-decoration: none; font-size: 0.9rem;">Edit</a>
+                                    <form action="{{ url_for('review.delete', review_id=review.review_id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" style="background: none; border: none; color: #ef4444; font-family: 'Actor', sans-serif; cursor: pointer; padding: 0; font-size: 0.9rem;">Delete</button>
+                                    </form>
+                                </div>
+                                {% elif current_user.is_authenticated and current_user.role == 'admin' %}
+                                <div style="margin-top: 8px; display: flex; gap: 8px; justify-content: flex-end;">
+                                    <form action="{{ url_for('admin.delete_review', review_id=review.review_id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this review as an admin? This action cannot be undone.');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="redirect_to" value="resource">
+                                        <button type="submit" style="background: none; border: none; color: #ef4444; font-family: 'Actor', sans-serif; cursor: pointer; padding: 0; font-size: 0.9rem;">Delete Review</button>
+                                    </form>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Review Comment -->
+                        {% if review.comment %}
+                        <div style="font-family: 'Actor', sans-serif; color: var(--text-secondary); line-height: 1.6; margin-bottom: 16px;">
+                            {{ review.comment }}
+                        </div>
+                        {% endif %}
+
+                        <!-- Host Response -->
+                        {% if review.host_response %}
+                        <div style="margin-top: 16px; padding: 16px; background: rgba(153, 9, 221, 0.1); border-left: 3px solid var(--accent-purple); border-radius: 8px;">
+                            <div style="font-family: 'Actor', sans-serif; font-weight: 600; color: var(--accent-purple); margin-bottom: 8px; font-size: 0.95rem;">
+                                Response from Owner
+                            </div>
+                            <div style="font-family: 'Actor', sans-serif; color: var(--text-secondary); line-height: 1.6;">
+                                {{ review.host_response }}
+                            </div>
+                            {% if review.host_responded_at %}
+                            <div class="utc-time" data-utc="{{ review.host_responded_at }}" data-date-only style="font-family: 'Actor', sans-serif; color: var(--text-quaternary); font-size: 0.85rem; margin-top: 8px;">
+                                {{ review.host_responded_at[:10] if review.host_responded_at else '' }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% elif is_owner and not review.host_response %}
+                        <!-- Host Response Form (only for resource owner) -->
+                        <div style="margin-top: 16px;">
+                            <button type="button" onclick="toggleResponseForm('{{ review.review_id }}')" style="background: rgba(153, 9, 221, 0.2); border: 1px solid rgba(153, 9, 221, 0.5); border-radius: 8px; padding: 8px 16px; color: var(--accent-purple); font-family: 'Actor', sans-serif; cursor: pointer; font-size: 0.9rem;">
+                                Respond to Review
+                            </button>
+                            <form id="response-form-{{ review.review_id }}" action="{{ url_for('review.respond', review_id=review.review_id) }}" method="POST" style="display: none; margin-top: 12px;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <textarea name="host_response" rows="3" required minlength="10" placeholder="Write your response (min 10 characters)..." style="width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 12px; color: var(--text-primary); font-family: 'Actor', sans-serif; resize: vertical;"></textarea>
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                    <button type="submit" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8)); border: none; border-radius: 8px; padding: 8px 16px; color: #fff; font-family: 'Actor', sans-serif; cursor: pointer; font-weight: 500;">Submit Response</button>
+                                    <button type="button" onclick="toggleResponseForm('{{ review.review_id }}')" style="background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 8px; padding: 8px 16px; color: var(--text-secondary); font-family: 'Actor', sans-serif; cursor: pointer;">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if reviews|length >= 10 %}
+                <div style="text-align: center; margin-top: 30px;">
+                    <a href="{{ url_for('review.resource_reviews', resource_id=resource.resource_id) }}" style="font-family: 'Actor', sans-serif; color: var(--accent-purple); text-decoration: none; font-weight: 500;">
+                        View All Reviews →
+                    </a>
+                </div>
+                {% endif %}
+
+            {% else %}
+                <!-- No Reviews Yet -->
+                <div class="placeholder-section">
+                    <p style="font-size: 1.2rem; margin-bottom: 8px;">No reviews yet</p>
+                    <p>Be the first to review this resource!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Smooth scroll to booking section
+function scrollToBooking(event) {
+    event.preventDefault();
+    const bookingSection = document.getElementById('booking-section');
+    if (bookingSection) {
+        bookingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Grid-Based Booking Calendar - Week View
+document.addEventListener('DOMContentLoaded', function() {
+    const timeGrid = document.getElementById('time-grid');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const noSlotsMessage = document.getElementById('no-slots-message');
+    const bookingFormContainer = document.getElementById('booking-form-container');
+    const selectedTimeDisplay = document.getElementById('selected-time-display');
+    const startDatetimeHidden = document.getElementById('start-datetime-hidden');
+    const endDatetimeHidden = document.getElementById('end-datetime-hidden');
+    const weekRangeDisplay = document.getElementById('week-range-display');
+    const prevWeekBtn = document.getElementById('prev-week-btn');
+    const nextWeekBtn = document.getElementById('next-week-btn');
+
+    let timeSlots = [];  // Array of all time slots with their states
+    let selectedStartIndex = null;
+    let selectedEndIndex = null;
+    let minBookingDuration = 60;  // Default 60 minutes
+    let maxBookingDuration = 480;  // Default 8 hours
+    let maxAdvanceBookingDays = 30;  // Default 30 days in advance
+    let availabilityRules = null;
+    let currentWeekStart = null;
+
+    // Parse availability rules
+    {% if resource.availability_rules %}
+    try {
+        availabilityRules = JSON.parse('{{ resource.availability_rules|safe }}');
+        if (availabilityRules.booking_duration_min) {
+            minBookingDuration = availabilityRules.booking_duration_min;
+        }
+        if (availabilityRules.booking_duration_max) {
+            maxBookingDuration = availabilityRules.booking_duration_max;
+        }
+        if (availabilityRules.advance_booking_days) {
+            maxAdvanceBookingDays = availabilityRules.advance_booking_days;
+        }
+    } catch (e) {
+        console.error('Error parsing availability rules:', e);
+    }
+    {% endif %}
+
+    // Get start of week (Monday)
+    function getWeekStart(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+        return new Date(d.setDate(diff));
+    }
+
+    // Initialize to current week
+    const today = new Date();
+    currentWeekStart = getWeekStart(today);
+
+    // Load time grid for the week
+    async function loadWeekView() {
+        loadingIndicator.style.display = 'block';
+        timeGrid.innerHTML = '';
+        noSlotsMessage.style.display = 'none';
+        bookingFormContainer.style.display = 'none';
+        selectedStartIndex = null;
+        selectedEndIndex = null;
+        timeSlots = [];
+
+        try {
+            // Calculate week dates (Monday to Sunday)
+            const weekDates = [];
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(currentWeekStart);
+                date.setDate(date.getDate() + i);
+                weekDates.push(date);
+            }
+
+            // Update week range display
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            weekRangeDisplay.textContent = `${currentWeekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+
+            // Check if we can navigate
+            const todayStart = getWeekStart(today);
+            prevWeekBtn.disabled = currentWeekStart <= todayStart;
+
+            const maxDate = new Date(today);
+            maxDate.setDate(maxDate.getDate() + maxAdvanceBookingDays);
+            const maxWeekStart = getWeekStart(maxDate);
+            nextWeekBtn.disabled = currentWeekStart >= maxWeekStart;
+
+            // Fetch bookings for the entire week
+            const weekStart = new Date(currentWeekStart);
+            weekStart.setHours(0, 0, 0, 0);
+            const weekEnd2 = new Date(weekEnd);
+            weekEnd2.setHours(23, 59, 59, 999);
+
+            const response = await fetch(`/bookings/calendar-data/{{ resource.resource_id }}?start=${weekStart.toISOString()}&end=${weekEnd2.toISOString()}`);
+            const bookings = await response.json();
+            console.log('Fetched bookings:', bookings);
+
+            // Generate time slots for each day
+            weekDates.forEach(date => {
+                const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][date.getDay()];
+                const daySchedule = availabilityRules?.weekly_schedule?.find(d => d.day === dayOfWeek);
+
+                if (daySchedule && daySchedule.slots && daySchedule.slots.length > 0) {
+                    daySchedule.slots.forEach(slot => {
+                        const [startHour, startMin] = slot.start_time.split(':').map(Number);
+                        const [endHour, endMin] = slot.end_time.split(':').map(Number);
+
+                        const slotStart = startHour * 60 + startMin;
+                        const slotEnd = endHour * 60 + endMin;
+
+                        // Generate 30-minute intervals
+                        for (let time = slotStart; time < slotEnd; time += 30) {
+                            const slotDateTime = new Date(date);
+                            slotDateTime.setHours(Math.floor(time / 60), time % 60, 0, 0);
+
+                            const slotEndDateTime = new Date(date);
+                            slotEndDateTime.setHours(Math.floor((time + 30) / 60), (time + 30) % 60, 0, 0);
+
+                            // Check if this time is booked
+                            const isBooked = bookings.some(booking => {
+                                const bookingStart = new Date(booking.start);
+                                const bookingEnd = new Date(booking.end);
+                                const overlaps = (slotDateTime < bookingEnd && slotEndDateTime > bookingStart);
+                                if (overlaps) {
+                                    console.log('Slot marked as booked:', {
+                                        slotStart: slotDateTime.toISOString(),
+                                        slotEnd: slotEndDateTime.toISOString(),
+                                        bookingStart: bookingStart.toISOString(),
+                                        bookingEnd: bookingEnd.toISOString()
+                                    });
+                                }
+                                return overlaps;
+                            });
+
+                            // Check if past or beyond max advance booking
+                            const now = new Date();
+                            const isPast = slotDateTime < now;  // Changed to check start time, not end time
+                            const isBeyondMax = slotDateTime > maxDate;
+
+                            timeSlots.push({
+                                start: slotDateTime,
+                                end: slotEndDateTime,
+                                isBooked: isBooked,
+                                isPast: isPast,
+                                isBeyondMax: isBeyondMax,
+                                dayIndex: date.getDay()
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (timeSlots.length === 0) {
+                noSlotsMessage.style.display = 'block';
+            } else {
+                renderWeekGrid(weekDates);
+            }
+        } catch (error) {
+            console.error('Error loading time slots:', error);
+            noSlotsMessage.textContent = 'Error loading time slots. Please try again.';
+            noSlotsMessage.style.display = 'block';
+        } finally {
+            loadingIndicator.style.display = 'none';
+        }
+    }
+
+    // Render the week grid table
+    function renderWeekGrid(weekDates) {
+        if (timeSlots.length === 0) return;
+
+        const table = document.createElement('table');
+        table.className = 'time-grid-table';
+
+        // Create header row with day labels
+        const headerRow = document.createElement('tr');
+        const timeHeader = document.createElement('th');
+        timeHeader.textContent = 'Time';
+        headerRow.appendChild(timeHeader);
+
+        weekDates.forEach(date => {
+            const th = document.createElement('th');
+            th.className = 'day-header';
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+            const dayNum = date.getDate();
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            th.textContent = `${dayName} ${month} ${dayNum}`;
+            headerRow.appendChild(th);
+        });
+
+        table.appendChild(headerRow);
+
+        // Get all unique hours across all slots
+        const hours = [];
+        timeSlots.forEach(slot => {
+            const hour = slot.start.getHours();
+            if (!hours.includes(hour)) {
+                hours.push(hour);
+            }
+        });
+        hours.sort((a, b) => a - b);
+
+        // Create rows for each hour
+        hours.forEach(hour => {
+            const row = document.createElement('tr');
+            const timeLabel = document.createElement('td');
+            timeLabel.style.fontWeight = '600';
+            timeLabel.style.background = 'rgba(153, 9, 221, 0.1)';
+            const displayHour = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            timeLabel.textContent = `${displayHour} ${ampm}`;
+            row.appendChild(timeLabel);
+
+            // Add cells for each day
+            weekDates.forEach(date => {
+                const td = document.createElement('td');
+                const container = document.createElement('div');
+                container.className = 'time-cell-container';
+
+                // Find :00 and :30 slots for this hour and day
+                const slot00 = timeSlots.find(s =>
+                    s.start.toDateString() === date.toDateString() &&
+                    s.start.getHours() === hour &&
+                    s.start.getMinutes() === 0
+                );
+                const slot30 = timeSlots.find(s =>
+                    s.start.toDateString() === date.toDateString() &&
+                    s.start.getHours() === hour &&
+                    s.start.getMinutes() === 30
+                );
+
+                if (slot00) {
+                    const slotIndex = timeSlots.indexOf(slot00);
+                    const button = createSlotButton(slot00, slotIndex);
+                    container.appendChild(button);
+                } else {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.style.flex = '1';
+                    emptyDiv.style.background = 'rgba(50, 50, 50, 0.2)';
+                    container.appendChild(emptyDiv);
+                }
+
+                if (slot30) {
+                    const slotIndex = timeSlots.indexOf(slot30);
+                    const button = createSlotButton(slot30, slotIndex);
+                    container.appendChild(button);
+                } else {
+                    const emptyDiv = document.createElement('div');
+                    emptyDiv.style.flex = '1';
+                    emptyDiv.style.background = 'rgba(50, 50, 50, 0.2)';
+                    container.appendChild(emptyDiv);
+                }
+
+                td.appendChild(container);
+                row.appendChild(td);
+            });
+
+            table.appendChild(row);
+        });
+
+        timeGrid.appendChild(table);
+    }
+
+    // Create a button for a time slot
+    function createSlotButton(slot, index) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'time-grid-cell';
+        button.dataset.slotIndex = index;  // Store slot index as data attribute
+
+        if (slot.isPast || slot.isBooked || slot.isBeyondMax) {
+            // Prioritize: if past (even if booked), show as unavailable (grey)
+            // Only show red for future/current bookings
+            if (slot.isPast) {
+                button.className += ' unavailable';
+            } else if (slot.isBooked) {
+                button.className += ' booked';
+            } else {
+                button.className += ' unavailable';
+            }
+            button.disabled = true;
+        } else {
+            button.className += ' available';
+            button.addEventListener('click', () => handleSlotClick(index));
+        }
+
+        return button;
+    }
+
+    // Handle slot click
+    function handleSlotClick(index) {
+        const slot = timeSlots[index];
+        if (slot.isBooked || slot.isPast) return;
+
+        // If clicking the same start slot again, clear selection
+        if (selectedStartIndex === index && selectedEndIndex !== null) {
+            cancelSelection();
+            return;
+        }
+
+        // First click - select start and automatically select minimum duration
+        if (selectedStartIndex === null) {
+            selectedStartIndex = index;
+
+            // Calculate end index based on minimum booking duration
+            const startSlot = timeSlots[index];
+            let endIndex = index;
+
+            // Find the slot that matches the minimum booking duration
+            for (let i = index + 1; i < timeSlots.length; i++) {
+                const currentSlot = timeSlots[i];
+                const durationMinutes = (currentSlot.end.getTime() - startSlot.start.getTime()) / 60000;
+
+                // Check if this slot is booked or unavailable
+                if (currentSlot.isBooked || currentSlot.isPast || currentSlot.isBeyondMax) {
+                    break;
+                }
+
+                // If we've reached the minimum duration, set this as end
+                if (durationMinutes >= minBookingDuration) {
+                    endIndex = i;
+                    break;
+                }
+
+                // Keep extending if we haven't reached minimum yet
+                endIndex = i;
+            }
+
+            selectedEndIndex = endIndex;
+            updateGridDisplay();
+            updateSelectionRange();
+
+            // Automatically validate and show form if minimum duration is met
+            if (validateSelection()) {
+                showBookingForm();
+            }
+        }
+        // Subsequent clicks - update end time
+        else {
+            // Don't allow selecting slots before the start
+            if (index < selectedStartIndex) {
+                return;
+            }
+
+            selectedEndIndex = index;
+
+            updateGridDisplay();
+
+            // Validate selection
+            if (validateSelection()) {
+                showBookingForm();
+            }
+        }
+    }
+
+    // Update grid visual display
+    function updateGridDisplay() {
+        const cells = timeGrid.querySelectorAll('.time-grid-cell');
+        cells.forEach((cell) => {
+            const cellIndex = parseInt(cell.dataset.slotIndex);
+            cell.classList.remove('selected', 'in-range');
+
+            if (selectedStartIndex !== null && selectedEndIndex !== null) {
+                if (cellIndex === selectedStartIndex || cellIndex === selectedEndIndex) {
+                    cell.classList.add('selected');
+                } else if (cellIndex > selectedStartIndex && cellIndex < selectedEndIndex) {
+                    cell.classList.add('in-range');
+                }
+            } else if (selectedStartIndex !== null && cellIndex === selectedStartIndex) {
+                cell.classList.add('selected');
+            }
+        });
+    }
+
+    // Update available slots based on max duration and conflicts
+    function updateSelectionRange() {
+        if (selectedStartIndex === null) return;
+
+        const startSlot = timeSlots[selectedStartIndex];
+        const cells = timeGrid.querySelectorAll('.time-grid-cell');
+
+        cells.forEach((cell) => {
+            const cellIndex = parseInt(cell.dataset.slotIndex);
+            const slot = timeSlots[cellIndex];
+            if (!slot) return;
+
+            // Skip slots that are before the start slot chronologically (earlier days/times)
+            // and the start slot itself
+            if (cellIndex <= selectedStartIndex) return;
+
+            // Calculate duration in minutes
+            const durationMinutes = (slot.end.getTime() - startSlot.start.getTime()) / 60000;
+
+            // Mark slots beyond max duration with amber color
+            if (durationMinutes > maxBookingDuration) {
+                cell.classList.remove('available');
+                cell.classList.add('beyond-max');
+                cell.disabled = true;
+                return;
+            }
+
+            // Grey out (unavailable) if there's a booked slot in between
+            let hasConflict = false;
+            for (let i = selectedStartIndex + 1; i <= cellIndex; i++) {
+                if (timeSlots[i].isBooked) {
+                    hasConflict = true;
+                    break;
+                }
+            }
+
+            if (hasConflict) {
+                cell.classList.remove('available');
+                cell.classList.add('unavailable');
+                cell.disabled = true;
+            }
+        });
+    }
+
+    // Validate the selected time range
+    function validateSelection() {
+        if (selectedStartIndex === null || selectedEndIndex === null) return false;
+
+        const startSlot = timeSlots[selectedStartIndex];
+        const endSlot = timeSlots[selectedEndIndex];
+
+        // Calculate duration
+        const durationMinutes = (endSlot.end.getTime() - startSlot.start.getTime()) / 60000;
+
+        // Check minimum duration
+        if (durationMinutes < minBookingDuration) {
+            alert(`Minimum booking duration is ${minBookingDuration} minutes (${Math.floor(minBookingDuration / 60)}h ${minBookingDuration % 60}m).`);
+            selectedStartIndex = null;
+            selectedEndIndex = null;
+            updateGridDisplay();
+            return false;
+        }
+
+        // Check for conflicts
+        for (let i = selectedStartIndex; i <= selectedEndIndex; i++) {
+            if (timeSlots[i].isBooked) {
+                alert('Your selection includes a booked time slot. Please select a different range.');
+                selectedStartIndex = null;
+                selectedEndIndex = null;
+                updateGridDisplay();
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Show booking form with selected time
+    // Helper function to format Date object to local datetime string (YYYY-MM-DDTHH:MM)
+    function formatLocalDatetime(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function showBookingForm() {
+        const startSlot = timeSlots[selectedStartIndex];
+        const endSlot = timeSlots[selectedEndIndex];
+
+        const startTime = startSlot.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        const endTime = endSlot.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+        const dateStr = startSlot.start.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        // Check if spans multiple days
+        if (endSlot.end.toDateString() !== startSlot.start.toDateString()) {
+            const endDateStr = endSlot.end.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            selectedTimeDisplay.textContent = `${dateStr} ${startTime} - ${endDateStr} ${endTime}`;
+        } else {
+            selectedTimeDisplay.textContent = `${dateStr} from ${startTime} to ${endTime}`;
+        }
+
+        // Use local datetime format instead of toISOString() to prevent timezone conversion
+        startDatetimeHidden.value = formatLocalDatetime(startSlot.start);
+        endDatetimeHidden.value = formatLocalDatetime(endSlot.end);
+
+        bookingFormContainer.style.display = 'block';
+        bookingFormContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Cancel selection
+    window.cancelSelection = function() {
+        selectedStartIndex = null;
+        selectedEndIndex = null;
+        updateGridDisplay();
+
+        // Reset all cells to original state
+        const cells = timeGrid.querySelectorAll('.time-grid-cell');
+        cells.forEach((cell) => {
+            const cellIndex = parseInt(cell.dataset.slotIndex);
+            const slot = timeSlots[cellIndex];
+            if (!slot) return;
+
+            // Clear all state classes
+            cell.classList.remove('selected', 'in-range', 'unavailable', 'beyond-max', 'available', 'booked');
+
+            // Reset to original state (beyond-max is not a persistent state, only isPast and isBooked are)
+            if (slot.isPast || slot.isBooked) {
+                cell.disabled = true;
+                if (slot.isBooked) {
+                    cell.classList.add('booked');
+                } else {
+                    cell.classList.add('unavailable');
+                }
+            } else {
+                cell.disabled = false;
+                cell.classList.add('available');
+            }
+        });
+
+        bookingFormContainer.style.display = 'none';
+    };
+
+    // Navigation event listeners
+    prevWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() - 7);
+        loadWeekView();
+    });
+
+    nextWeekBtn.addEventListener('click', () => {
+        currentWeekStart.setDate(currentWeekStart.getDate() + 7);
+        loadWeekView();
+    });
+
+    // Load week view initially
+    loadWeekView();
+});
+
+// Display availability schedule
+{% if resource.availability_rules %}
+document.addEventListener('DOMContentLoaded', function() {
+    const scheduleDisplay = document.getElementById('availability-schedule-display');
+    if (!scheduleDisplay) return;
+
+    try {
+        const availabilityRules = JSON.parse('{{ resource.availability_rules|safe }}');
+
+        // Convert 24-hour time to 12-hour AM/PM format
+        function formatTime(timeStr) {
+            const [hours, minutes] = timeStr.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour === 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+            return `${displayHour}:${minutes} ${ampm}`;
+        }
+
+        // Format duration (convert to hours if >= 60 minutes)
+        function formatDuration(minutes) {
+            if (minutes >= 60) {
+                const hours = minutes / 60;
+                if (hours === Math.floor(hours)) {
+                    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+                } else {
+                    return `${hours.toFixed(1)} hours`;
+                }
+            }
+            return `${minutes} minutes`;
+        }
+
+        // Group consecutive days with same time slots
+        const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+        const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+        let scheduleHTML = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+
+        let currentGroup = null;
+        let groupStart = null;
+
+        // Convert weekly_schedule array to map for easier access
+        const scheduleMap = {};
+        if (Array.isArray(availabilityRules.weekly_schedule)) {
+            availabilityRules.weekly_schedule.forEach(dayData => {
+                if (dayData.slots && dayData.slots.length > 0) {
+                    scheduleMap[dayData.day] = dayData.slots;
+                }
+            });
+        }
+
+        for (let i = 0; i < days.length; i++) {
+            const day = days[i];
+            const slots = scheduleMap[day];
+
+            if (slots && slots.length > 0) {
+                const slotsStr = JSON.stringify(slots);
+
+                if (currentGroup === slotsStr) {
+                    // Continue the current group
+                    continue;
+                } else {
+                    // Finalize previous group if exists
+                    if (currentGroup !== null && groupStart !== null) {
+                        const prevDay = days[i - 1];
+                        const prevSlots = scheduleMap[prevDay];
+                        const dayRange = groupStart === i - 1
+                            ? dayNames[groupStart]
+                            : `${dayNames[groupStart]} - ${dayNames[i - 1]}`;
+
+                        scheduleHTML += `<div style="padding: 12px; background: rgba(153, 9, 221, 0.1); border-radius: 8px; border-left: 3px solid var(--accent-purple);">`;
+                        scheduleHTML += `<div style="font-family: 'Actor', sans-serif; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">${dayRange}</div>`;
+
+                        prevSlots.forEach(slot => {
+                            scheduleHTML += `<div style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.95rem;">`;
+                            scheduleHTML += `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`;
+                            scheduleHTML += `</div>`;
+                        });
+
+                        scheduleHTML += `</div>`;
+                    }
+
+                    // Start new group
+                    currentGroup = slotsStr;
+                    groupStart = i;
+                }
+            } else {
+                // Finalize previous group if exists
+                if (currentGroup !== null && groupStart !== null) {
+                    const prevDay = days[i - 1];
+                    const prevSlots = scheduleMap[prevDay];
+                    const dayRange = groupStart === i - 1
+                        ? dayNames[groupStart]
+                        : `${dayNames[groupStart]} - ${dayNames[i - 1]}`;
+
+                    scheduleHTML += `<div style="padding: 12px; background: rgba(153, 9, 221, 0.1); border-radius: 8px; border-left: 3px solid var(--accent-purple);">`;
+                    scheduleHTML += `<div style="font-family: 'Actor', sans-serif; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">${dayRange}</div>`;
+
+                    prevSlots.forEach(slot => {
+                        scheduleHTML += `<div style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.95rem;">`;
+                        scheduleHTML += `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`;
+                        scheduleHTML += `</div>`;
+                    });
+
+                    scheduleHTML += `</div>`;
+                }
+
+                currentGroup = null;
+                groupStart = null;
+            }
+        }
+
+        // Finalize last group if exists
+        if (currentGroup !== null && groupStart !== null) {
+            const lastDay = days[days.length - 1];
+            const lastSlots = scheduleMap[lastDay];
+            const dayRange = groupStart === days.length - 1
+                ? dayNames[groupStart]
+                : `${dayNames[groupStart]} - ${dayNames[days.length - 1]}`;
+
+            scheduleHTML += `<div style="padding: 12px; background: rgba(153, 9, 221, 0.1); border-radius: 8px; border-left: 3px solid var(--accent-purple);">`;
+            scheduleHTML += `<div style="font-family: 'Actor', sans-serif; font-weight: 600; color: var(--text-primary); margin-bottom: 6px;">${dayRange}</div>`;
+
+            lastSlots.forEach(slot => {
+                scheduleHTML += `<div style="font-family: 'Actor', sans-serif; color: var(--text-tertiary); font-size: 0.95rem;">`;
+                scheduleHTML += `${formatTime(slot.start_time)} - ${formatTime(slot.end_time)}`;
+                scheduleHTML += `</div>`;
+            });
+
+            scheduleHTML += `</div>`;
+        }
+
+        scheduleHTML += '</div>';
+
+        // Add booking duration info if available
+        if (availabilityRules.booking_duration_min || availabilityRules.booking_duration_max) {
+            scheduleHTML += '<div style="margin-top: 16px; padding: 12px; background: rgba(134, 70, 238, 0.1); border-radius: 8px; font-family: \'Actor\', sans-serif; color: var(--text-tertiary); font-size: 0.9rem;">';
+            scheduleHTML += '<strong>Booking Duration:</strong> ';
+            if (availabilityRules.booking_duration_min && availabilityRules.booking_duration_max) {
+                scheduleHTML += `${formatDuration(availabilityRules.booking_duration_min)} - ${formatDuration(availabilityRules.booking_duration_max)}`;
+            } else if (availabilityRules.booking_duration_min) {
+                scheduleHTML += `Minimum ${formatDuration(availabilityRules.booking_duration_min)}`;
+            } else {
+                scheduleHTML += `Maximum ${formatDuration(availabilityRules.booking_duration_max)}`;
+            }
+            scheduleHTML += '</div>';
+        }
+
+        scheduleDisplay.innerHTML = scheduleHTML;
+    } catch (e) {
+        console.error('Error parsing availability rules:', e);
+        scheduleDisplay.innerHTML = '<div style="color: var(--text-quaternary);">Availability information not available</div>';
+    }
+});
+{% endif %}
+
+// Toggle host response form
+function toggleResponseForm(reviewId) {
+    const form = document.getElementById(`response-form-${reviewId}`);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

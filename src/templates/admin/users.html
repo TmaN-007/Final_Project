@@ -1,0 +1,489 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Users - Admin Panel{% endblock %}
+
+{% block additional_css %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .back-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+    }
+
+    .filters-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-input, .filter-select {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .filter-button {
+        padding: 0.75rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .filter-button:hover {
+        background: #2563eb;
+    }
+
+    .clear-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .clear-button:hover {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+    }
+
+    .users-table-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .users-table thead {
+        background: var(--hover-bg);
+    }
+
+    .users-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .users-table td {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .users-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .users-table tbody tr:hover {
+        background: var(--hover-bg);
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .user-name-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .user-name-link:hover .user-name {
+        color: #3b82f6;
+        text-decoration: underline;
+    }
+
+    .user-email {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge.inactive {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+
+    .status-badge.banned {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        font-weight: 700;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .role-badge.admin {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+
+    .role-badge.staff {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .role-badge.student {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: var(--hover-bg);
+        transform: translateY(-1px);
+    }
+
+    .action-btn.primary {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    .action-btn.primary:hover {
+        background: #2563eb;
+    }
+
+    .action-btn.danger {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .action-btn.danger:hover {
+        background: #dc2626;
+    }
+
+    .action-btn.success {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .action-btn.success:hover {
+        background: #059669;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        padding: 1rem;
+    }
+
+    .pagination-btn {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .pagination-btn:hover:not(.disabled) {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .pagination-btn.active {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="back-link">← Back to Dashboard</a>
+            <h1>Manage Users</h1>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" action="{{ url_for('admin.users') }}" id="filterForm">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="search">Search</label>
+                    <input type="text" id="search" name="search" class="filter-input"
+                           placeholder="Name or email..." value="{{ request.args.get('search', '') }}">
+                </div>
+                <div class="filter-group">
+                    <label for="role">Role</label>
+                    <select id="role" name="role" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                        <option value="">All Roles</option>
+                        <option value="student" {% if request.args.get('role') == 'student' %}selected{% endif %}>Student</option>
+                        <option value="staff" {% if request.args.get('role') == 'staff' %}selected{% endif %}>Staff</option>
+                        <option value="admin" {% if request.args.get('role') == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="status">Status</label>
+                    <select id="status" name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+                        <option value="banned" {% if request.args.get('status') == 'banned' %}selected{% endif %}>Banned</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <a href="{{ url_for('admin.users') }}" class="clear-button" style="display: inline-block; text-align: center; text-decoration: none;">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    // Submit search on Enter key press
+    document.getElementById('search').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.getElementById('filterForm').submit();
+        }
+    });
+
+    // Confirm role change before submitting
+    function confirmRoleChange(selectElement, userName, currentRole, userId) {
+        const newRole = selectElement.value;
+
+        // If no role selected (default option), do nothing
+        if (!newRole) {
+            return;
+        }
+
+        // Ask for confirmation
+        const confirmed = confirm(`Are you sure you want to change ${userName}'s role from ${currentRole} to ${newRole}?`);
+
+        if (confirmed) {
+            // Submit the form
+            document.getElementById('roleForm' + userId).submit();
+        } else {
+            // Reset the select to empty option
+            selectElement.value = '';
+        }
+    }
+    </script>
+
+    <!-- Users Table -->
+    <div class="users-table-container">
+        {% if result.users %}
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in result.users %}
+                <tr>
+                    <td>
+                        <a href="{{ url_for('admin.user_detail', user_id=user.user_id) }}" class="user-name-link">
+                            <div class="user-name">{{ user.name }}</div>
+                            <div class="user-email">{{ user.email }}</div>
+                        </a>
+                    </td>
+                    <td>
+                        <span class="role-badge {{ user.role }}">{{ user.role }}</span>
+                    </td>
+                    <td>
+                        <span class="status-badge {{ user.status }}">{{ user.status }}</span>
+                    </td>
+                    <td>{{ user.last_login[:16] if user.last_login else 'Never' }}</td>
+                    <td>{{ user.created_at[:10] if user.created_at else 'N/A' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if user.user_id != current_user.user_id %}
+                                <form method="POST" action="{{ url_for('admin.change_user_role', user_id=user.user_id) }}" style="display: inline;" id="roleForm{{ user.user_id }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <select name="role" class="filter-select" style="padding: 0.5rem; font-size: 0.85rem;"
+                                            onchange="confirmRoleChange(this, '{{ user.name }}', '{{ user.role }}', {{ user.user_id }})">
+                                        <option value="">Change Role</option>
+                                        <option value="student" {% if user.role == 'student' %}disabled{% endif %}>Student</option>
+                                        <option value="staff" {% if user.role == 'staff' %}disabled{% endif %}>Staff</option>
+                                        <option value="admin" {% if user.role == 'admin' %}disabled{% endif %}>Admin</option>
+                                    </select>
+                                </form>
+                                {% if user.is_banned %}
+                                <form method="POST" action="{{ url_for('admin.unban_user', user_id=user.user_id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="action-btn success">Unban</button>
+                                </form>
+                                {% else %}
+                                <form method="POST" action="{{ url_for('admin.ban_user', user_id=user.user_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to ban this user?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="action-btn danger">Ban</button>
+                                </form>
+                                {% endif %}
+                            {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.85rem;">—</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if result.pagination.total_pages > 1 %}
+        <div class="pagination">
+            {% if result.pagination.has_prev %}
+            <a href="{{ url_for('admin.users', page=result.pagination.page - 1, search=request.args.get('search', ''), role=request.args.get('role', ''), status=request.args.get('status', '')) }}"
+               class="pagination-btn">Previous</a>
+            {% else %}
+            <span class="pagination-btn disabled">Previous</span>
+            {% endif %}
+
+            <span class="pagination-info">
+                Page {{ result.pagination.page }} of {{ result.pagination.total_pages }}
+                ({{ result.pagination.total_count }} total)
+            </span>
+
+            {% if result.pagination.has_next %}
+            <a href="{{ url_for('admin.users', page=result.pagination.page + 1, search=request.args.get('search', ''), role=request.args.get('role', ''), status=request.args.get('status', '')) }}"
+               class="pagination-btn">Next</a>
+            {% else %}
+            <span class="pagination-btn disabled">Next</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">👥</div>
+            <h3>No users found</h3>
+            <p>Try adjusting your filters</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

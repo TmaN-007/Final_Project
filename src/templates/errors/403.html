@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    .error-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .error-container {
+        max-width: 600px;
+        text-align: center;
+        padding: 40px 20px;
+    }
+
+    .error-icon {
+        font-size: 6rem;
+        margin-bottom: 20px;
+        opacity: 0.8;
+    }
+
+    .error-code {
+        font-family: 'Actor', sans-serif;
+        font-size: 4rem;
+        font-weight: 700;
+        color: var(--accent-purple);
+        margin-bottom: 16px;
+    }
+
+    .error-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+
+    .error-message {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-quaternary);
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: var(--text-secondary);
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        border-color: var(--accent-purple);
+        color: var(--accent-purple);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-container">
+        <div class="error-icon">🔒</div>
+        <div class="error-code">403</div>
+        <h1 class="error-title">Access Denied</h1>
+        <p class="error-message">
+            You don't have permission to access this page. This area is restricted to staff and administrators only.
+        </p>
+        <div class="error-actions">
+            <a href="{{ url_for('main.index') }}" class="btn-primary">Go to Home</a>
+            <a href="javascript:history.back()" class="btn-secondary">Go Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

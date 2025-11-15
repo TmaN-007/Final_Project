@@ -179,6 +179,9 @@ def login():
             # Login user with Flask-Login
             login_user(user, remember=remember_me)
 
+            # Update last login timestamp
+            UserDAL.update_last_login(user.id)
+
             logger.info(f"Successful login for user: {email} (ID: {user.id})")
             # Don't show welcome message - removed per user request
             # flash(f'Welcome back, {user.name}!', 'success')
@@ -337,3 +340,83 @@ def reset_password(token):
                           title='Reset Password',
                           token=token,
                           page='reset_password')
+
+
+@auth_bp.route('/profile/edit', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    """
+    Edit user profile route.
+
+    GET: Display profile edit form with current user data
+    POST: Process profile update
+
+    Form Fields:
+        - name (str): Full name
+        - email (str): Email address
+
+    Returns:
+        HTML: Profile edit form or redirect to same page on success
+
+    Security:
+        - Login required
+        - CSRF protection
+        - Input validation and sanitization
+    """
+    from src.utils.security import sanitize_html
+
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+
+        # Validate inputs
+        if not name or len(name) < 2:
+            flash('Name must be at least 2 characters long.', 'danger')
+            return render_template('auth/edit_profile.html',
+                                 title='Edit Profile',
+                                 page='edit_profile')
+
+        if not email or '@' not in email:
+            flash('Please provide a valid email address.', 'danger')
+            return render_template('auth/edit_profile.html',
+                                 title='Edit Profile',
+                                 page='edit_profile')
+
+        # Sanitize inputs
+        name = sanitize_html(name)
+        email = sanitize_html(email)
+
+        # Check if email is already taken by another user
+        if email != current_user.email:
+            if UserDAL.email_exists(email):
+                flash('Email address is already in use by another user.', 'danger')
+                return render_template('auth/edit_profile.html',
+                                     title='Edit Profile',
+                                     page='edit_profile')
+
+        # Update user profile
+        try:
+            success = UserDAL.update_user(
+                user_id=current_user.user_id,
+                name=name,
+                email=email
+            )
+
+            if success:
+                # Update the current_user object
+                current_user.name = name
+                current_user.email = email
+
+                logger.info(f"User {current_user.user_id} updated profile")
+                flash('Profile updated successfully!', 'success')
+                return redirect(url_for('main.index'))
+            else:
+                flash('Failed to update profile. Please try again.', 'danger')
+
+        except Exception as e:
+            logger.error(f"Error updating user profile: {e}")
+            flash('An error occurred while updating your profile.', 'danger')
+
+    return render_template('auth/edit_profile.html',
+                         title='Edit Profile',
+                         page='edit_profile')

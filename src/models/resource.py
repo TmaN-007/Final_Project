@@ -24,6 +24,8 @@ class Resource:
         status: 'draft', 'published', or 'archived'
         availability_mode: 'rules', 'open', or 'by-request'
         requires_approval: Whether bookings need approval
+        images: Comma-separated image paths or JSON array
+        availability_rules: JSON blob describing recurring availability
         created_at: Creation timestamp
         updated_at: Last update timestamp
     """
@@ -46,6 +48,8 @@ class Resource:
         self._status = resource_data['status']
         self._availability_mode = resource_data['availability_mode']
         self._requires_approval = bool(resource_data.get('requires_approval', False))
+        self._images = resource_data.get('images')
+        self._availability_rules = resource_data.get('availability_rules')
         self._created_at = resource_data.get('created_at')
         self._updated_at = resource_data.get('updated_at')
 
@@ -185,6 +189,26 @@ class Resource:
         self._requires_approval = bool(value)
 
     @property
+    def images(self) -> Optional[str]:
+        """Get images."""
+        return self._images
+
+    @images.setter
+    def images(self, value: Optional[str]):
+        """Set images."""
+        self._images = value
+
+    @property
+    def availability_rules(self) -> Optional[str]:
+        """Get availability rules."""
+        return self._availability_rules
+
+    @availability_rules.setter
+    def availability_rules(self, value: Optional[str]):
+        """Set availability rules."""
+        self._availability_rules = value
+
+    @property
     def created_at(self):
         """Get creation timestamp."""
         return self._created_at
@@ -274,6 +298,8 @@ class Resource:
             'status': self.status,
             'availability_mode': self.availability_mode,
             'requires_approval': self.requires_approval,
+            'images': self.images,
+            'availability_rules': self.availability_rules,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'owner_name': self.owner_name,

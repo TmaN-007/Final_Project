@@ -223,6 +223,14 @@ CREATE TABLE message_threads (
     updated_at DATETIME
 );
 
+CREATE TABLE message_thread_participants (
+    thread_id INTEGER NOT NULL REFERENCES message_threads(thread_id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_read_at DATETIME,
+    PRIMARY KEY (thread_id, user_id)
+);
+
 CREATE TABLE messages (
     message_id INTEGER PRIMARY KEY AUTOINCREMENT,
     thread_id INTEGER NOT NULL REFERENCES message_threads(thread_id) ON DELETE CASCADE,
@@ -412,6 +420,8 @@ CREATE INDEX idx_search_queries_user ON search_queries(user_id);
 CREATE INDEX idx_messages_thread ON messages(thread_id);
 CREATE INDEX idx_messages_sender ON messages(sender_id);
 CREATE INDEX idx_messages_receiver ON messages(receiver_id);
+CREATE INDEX idx_message_participants_user ON message_thread_participants(user_id);
+CREATE INDEX idx_message_participants_thread ON message_thread_participants(thread_id);
 
 -- Admin logs
 CREATE INDEX idx_admin_logs_admin ON admin_logs(admin_id);

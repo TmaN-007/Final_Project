@@ -1,0 +1,450 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Bookings Page Styles */
+    .bookings-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .bookings-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+
+    .page-subtitle {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-quaternary);
+    }
+
+    /* Filters */
+    .bookings-filters {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 30px;
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+
+    .filter-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-tertiary);
+    }
+
+    .filter-select {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 10px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .btn-filter-apply {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-filter-apply:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    /* Bookings List */
+    .bookings-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .booking-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .booking-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(153, 9, 221, 0.3);
+        border-color: var(--accent-purple);
+    }
+
+    .booking-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .booking-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .booking-resource {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-tertiary);
+    }
+
+    .booking-status-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        font-family: 'Actor', sans-serif;
+        white-space: nowrap;
+    }
+
+    .booking-status-badge.approved {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .booking-status-badge.pending {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    .booking-status-badge.rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .booking-status-badge.cancelled {
+        background: rgba(107, 114, 128, 0.2);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.5);
+    }
+
+    .booking-status-badge.completed {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .booking-details {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-quaternary);
+    }
+
+    .booking-detail-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-state-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .empty-state-text {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-quaternary);
+        margin-bottom: 24px;
+    }
+
+    .btn-browse {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+
+    .btn-write-review {
+        display: inline-block;
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 0.95rem;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .btn-write-review:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+
+    /* Pagination */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        margin-top: 40px;
+        padding: 20px;
+    }
+
+    .pagination-btn {
+        padding: 10px 20px;
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .pagination-btn:hover:not(.disabled) {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        border-color: var(--border-color);
+    }
+
+    .pagination-info {
+        color: var(--text-tertiary);
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        padding: 0 16px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bookings-page">
+    <div class="bookings-container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1 class="page-title">My Bookings</h1>
+            <p class="page-subtitle">View and manage your resource reservations</p>
+        </div>
+
+        <!-- Filters -->
+        <form method="GET" action="{{ url_for('booking.index') }}" class="bookings-filters" id="filterForm">
+            <div class="filter-group">
+                <label class="filter-label">Status:</label>
+                <select name="status" class="filter-select" id="statusFilter" onchange="handleFilterChange()">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All</option>
+                    <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Time:</label>
+                <select name="upcoming" class="filter-select" id="timeFilter" onchange="document.getElementById('filterForm').submit();">
+                    <option value="true" {% if upcoming_only %}selected{% endif %}>Upcoming Only</option>
+                    <option value="false" {% if not upcoming_only %}selected{% endif %}>All Time</option>
+                </select>
+            </div>
+        </form>
+
+        <script>
+        function handleFilterChange() {
+            const statusFilter = document.getElementById('statusFilter');
+            const timeFilter = document.getElementById('timeFilter');
+            const form = document.getElementById('filterForm');
+
+            // If completed or cancelled is selected, automatically set to "All Time"
+            if (statusFilter.value === 'completed' || statusFilter.value === 'cancelled') {
+                timeFilter.value = 'false';
+            }
+
+            // Submit the form
+            form.submit();
+        }
+        </script>
+
+        <!-- Bookings List -->
+        {% if bookings %}
+            <div class="bookings-list">
+                {% for booking in bookings %}
+                    <div style="position: relative;">
+                        <a href="{{ url_for('booking.detail', booking_id=booking.booking_id) }}" class="booking-card">
+                            <div class="booking-header">
+                                <div>
+                                    <div class="booking-title">{{ booking.resource_title or 'Unknown Resource' }}</div>
+                                    <div class="booking-resource">Booking #{{ booking.booking_id }}</div>
+                                </div>
+                                <div class="booking-status-badge {{ booking.status }}">
+                                    {{ booking.status|title }}
+                                </div>
+                            </div>
+
+                            <div class="booking-details">
+                                <div class="booking-detail-item">
+                                    📅 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-date-only>
+                                        {{ booking.start_datetime.strftime('%B %d, %Y') }}
+                                    </span>
+                                </div>
+                                <div class="booking-detail-item">
+                                    🕐 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>
+                                        {{ booking.start_datetime.strftime('%I:%M %p') }}
+                                    </span> - <span class="utc-time" data-utc="{{ booking.end_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>
+                                        {{ booking.end_datetime.strftime('%I:%M %p') }}
+                                    </span>
+                                </div>
+                                <div class="booking-detail-item">
+                                    ⏱️ {{ booking.get_duration_string() }}
+                                </div>
+                                {% if booking._resource_location %}
+                                    <div class="booking-detail-item">
+                                        📍 {{ booking._resource_location }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if booking.notes %}
+                                <div style="margin-top: 12px; font-size: 0.9rem; color: var(--text-quinary);">
+                                    {{ booking.notes[:100] }}{% if booking.notes|length > 100 %}...{% endif %}
+                                </div>
+                            {% endif %}
+                        </a>
+
+                        {% if booking.status == 'completed' and booking.booking_id in booking_review_status and not booking_review_status[booking.booking_id] %}
+                            <a href="{{ url_for('review.create', resource_id=booking.resource_id, booking_id=booking.booking_id) }}"
+                               class="btn-write-review"
+                               style="position: absolute; top: 24px; right: 24px; margin-top: 48px;">
+                                ✍️ Write Review
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if pagination.total_pages > 1 %}
+            <div class="pagination">
+                {% if pagination.has_prev %}
+                <a href="{{ url_for('booking.index', page=pagination.page - 1, status=status_filter, upcoming=upcoming_only) }}"
+                   class="pagination-btn">Previous</a>
+                {% else %}
+                <span class="pagination-btn disabled">Previous</span>
+                {% endif %}
+
+                <span class="pagination-info">
+                    Showing {{ ((pagination.page - 1) * pagination.per_page + 1) }} - {{ [pagination.page * pagination.per_page, pagination.total_count]|min }} of {{ pagination.total_count }} total
+                </span>
+
+                {% if pagination.has_next %}
+                <a href="{{ url_for('booking.index', page=pagination.page + 1, status=status_filter, upcoming=upcoming_only) }}"
+                   class="pagination-btn">Next</a>
+                {% else %}
+                <span class="pagination-btn disabled">Next</span>
+                {% endif %}
+            </div>
+            {% endif %}
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <h2 class="empty-state-title">No Bookings Found</h2>
+                <p class="empty-state-text">You haven't made any bookings yet. Start exploring available resources!</p>
+                <a href="{{ url_for('resource.index') }}" class="btn-browse">Browse Resources</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

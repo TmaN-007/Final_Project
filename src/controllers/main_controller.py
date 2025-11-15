@@ -35,9 +35,19 @@ def index():
     print(f"DEBUG: current_user.is_authenticated = {current_user.is_authenticated}", file=sys.stderr, flush=True)
     if current_user.is_authenticated:
         print(f"DEBUG: Rendering home/home.html for user {current_user.email}", file=sys.stderr, flush=True)
+
+        # Get category availability counts
+        from src.data_access.resource_dal import ResourceDAL
+        category_availability = ResourceDAL.get_category_availability_counts()
+
+        # Get featured resources (2 most rated + 2 most booked from user's preferred categories)
+        featured_resources = ResourceDAL.get_featured_resources(current_user.user_id, limit=4)
+
         return render_template('home/home.html',
                               title='Home',
-                              page='home')
+                              page='home',
+                              category_availability=category_availability,
+                              featured_resources=featured_resources)
     else:
         # Redirect unauthenticated users to login page
         print("DEBUG: Redirecting anonymous user to login", file=sys.stderr, flush=True)

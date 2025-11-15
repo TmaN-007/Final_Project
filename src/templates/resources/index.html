@@ -1,0 +1,572 @@
+{% extends 'base.html' %}
+
+{% block title %}Browse Resources - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Resources Browse Page Styles */
+    .resources-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .search-header {
+        padding: 60px 20px 40px;
+        text-align: center;
+    }
+
+    .search-header h1 {
+        font-size: 48px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        color: #fff;
+    }
+
+    [data-theme="light"] .search-header h1 {
+        color: #000;
+    }
+
+    /* Filters Bar - Enhanced with Date/Time Filters */
+    .filters-bar {
+        max-width: 1100px;
+        margin: 0 auto 40px;
+    }
+
+    .filter-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .filter-row {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 16px;
+        padding: 4px;
+        transition: all 0.2s;
+        gap: 4px;
+    }
+
+    .filter-row:focus-within {
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.1);
+    }
+
+    .filter-input {
+        flex: 1;
+        padding: 16px 20px;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-size: 16px;
+        outline: none;
+        font-family: 'Actor', sans-serif;
+        min-width: 150px;
+    }
+
+    .filter-input::placeholder {
+        color: var(--text-quaternary);
+    }
+
+    .filter-select {
+        padding: 16px 12px;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-size: 14px;
+        outline: none;
+        font-family: 'Actor', sans-serif;
+        cursor: pointer;
+        border-left: 1px solid var(--input-border);
+        flex: 0 0 auto;
+        min-width: 130px;
+    }
+
+    .filter-date {
+        padding: 16px 10px;
+        border: none;
+        background: transparent;
+        color: var(--text-primary);
+        font-size: 14px;
+        outline: none;
+        font-family: 'Actor', sans-serif;
+        cursor: pointer;
+        flex: 0 0 auto;
+        min-width: 130px;
+    }
+
+    .filter-date:not(:first-child) {
+        border-left: 1px solid var(--input-border);
+    }
+
+    .filter-date::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
+
+    [data-theme="light"] .filter-date::-webkit-calendar-picker-indicator {
+        filter: invert(0);
+    }
+
+    .btn-filter {
+        padding: 12px 28px;
+        margin-right: 4px;
+        border-radius: 12px;
+        border: none;
+        background: rgba(255, 255, 255, 0.7);
+        color: #000;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        font-family: 'Actor', sans-serif;
+    }
+
+    [data-theme="light"] .btn-filter {
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+    }
+
+    .btn-filter:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="light"] .btn-filter:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 13px;
+        color: var(--text-quaternary);
+        padding-left: 12px;
+        white-space: nowrap;
+    }
+
+    @media (max-width: 768px) {
+        .filters-bar {
+            max-width: 100%;
+            padding: 0 10px;
+        }
+
+        .filter-row {
+            flex-wrap: wrap;
+        }
+
+        .filter-select, .filter-date {
+            min-width: calc(50% - 8px);
+        }
+    }
+
+    /* List View Styles */
+    .resources-list {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px 60px;
+    }
+
+    .resource-item {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+        color: inherit;
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        position: relative;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .resource-item:hover {
+        box-shadow: 0 4px 20px rgba(153, 9, 221, 0.2);
+        border-color: var(--accent-purple);
+    }
+
+    .resource-icon {
+        width: 80px;
+        height: 80px;
+        min-width: 80px;
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.2), rgba(134, 70, 238, 0.2));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .resource-icon img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    /* Theme-specific icon visibility */
+    [data-theme="dark"] .icon-light {
+        display: none;
+    }
+
+    [data-theme="dark"] .icon-dark {
+        display: block;
+    }
+
+    [data-theme="light"] .icon-light {
+        display: block;
+    }
+
+    [data-theme="light"] .icon-dark {
+        display: none;
+    }
+
+    .resource-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .resource-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        gap: 16px;
+    }
+
+    .resource-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .resource-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        font-family: 'Actor', sans-serif;
+        white-space: nowrap;
+    }
+
+    .resource-badge.available {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .resource-badge.booked {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .resource-category {
+        font-size: 0.9rem;
+        color: var(--accent-purple);
+        margin-bottom: 8px;
+        font-family: 'Actor', sans-serif;
+    }
+
+    .resource-description {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-quaternary);
+        margin-bottom: 12px;
+        line-height: 1.5;
+        padding-right: 120px;
+    }
+
+    .resource-meta {
+        display: flex;
+        gap: 20px;
+        font-size: 0.9rem;
+        font-family: 'Actor', sans-serif;
+        color: var(--text-quinary);
+        flex-wrap: wrap;
+        padding-right: 120px;
+    }
+
+    .resource-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .btn-book {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        background: var(--accent-purple);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-book:hover {
+        background: rgba(153, 9, 221, 0.8);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+
+    @media (max-width: 768px) {
+        .resource-item {
+            flex-direction: column;
+            align-items: flex-start;
+            padding-bottom: 60px;
+        }
+
+        .resource-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .btn-book {
+            right: 50%;
+            transform: translateX(50%);
+        }
+
+        .btn-book:hover {
+            transform: translateX(50%) translateY(-2px);
+        }
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-quinary);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 40px 20px;
+    }
+
+    .page-btn {
+        background: rgba(153, 9, 221, 0.2);
+        border: 1px solid rgba(153, 9, 221, 0.4);
+        border-radius: 8px;
+        padding: 8px 16px;
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-family: 'Actor', sans-serif;
+    }
+
+    .page-btn:hover, .page-btn.active {
+        background: rgba(153, 9, 221, 0.6);
+        border-color: rgba(153, 9, 221, 0.8);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="resources-page">
+    <!-- Search Header -->
+    <div class="search-header">
+        <h1>Browse Resources</h1>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+        <form method="GET" action="{{ url_for('resource.index') }}" class="filter-form" id="filterForm">
+            <!-- First Row: Search, Category, Location, Capacity -->
+            <div class="filter-row">
+                <input
+                    type="text"
+                    name="q"
+                    class="filter-input"
+                    placeholder="Search resources..."
+                    value="{{ search_query or '' }}"
+                >
+
+                <select name="category" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for cat in categories %}
+                        {% if cat['category_id'] in [1, 2, 3, 4, 7] %}
+                            <option value="{{ cat['category_id'] }}" {% if selected_category == cat['category_id'] %}selected{% endif %}>
+                                {{ cat['name'] }}
+                            </option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+
+                <select name="location" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Locations</option>
+                    <option value="Library" {% if selected_location == 'Library' %}selected{% endif %}>Library</option>
+                    <option value="Engineering" {% if selected_location == 'Engineering' %}selected{% endif %}>Engineering Building</option>
+                    <option value="Student Union" {% if selected_location == 'Student Union' %}selected{% endif %}>Student Union</option>
+                    <option value="Computer Science" {% if selected_location == 'Computer Science' %}selected{% endif %}>Computer Science Building</option>
+                    <option value="Media" {% if selected_location == 'Media' %}selected{% endif %}>Media Center</option>
+                </select>
+
+                <input
+                    type="number"
+                    name="capacity"
+                    class="filter-input"
+                    placeholder="Min Capacity"
+                    value="{{ selected_capacity or '' }}"
+                    min="1"
+                    style="flex: 0 0 auto; min-width: 120px;"
+                    oninput="debouncedSubmit()"
+                >
+            </div>
+
+            <!-- Second Row: Date, Time, Sort, Search Button -->
+            <div class="filter-row" style="justify-content: space-between;">
+                <div style="flex: 1; display: flex; align-items: center; padding: 0 10px;">
+                    <label for="start_date" style="color: var(--text-primary); font-size: 14px; margin-right: 8px; white-space: nowrap;">Start Date:</label>
+                    <input
+                        type="date"
+                        name="availability_date"
+                        class="filter-date"
+                        id="start_date"
+                        value="{{ selected_date or '' }}"
+                        style="flex: 1; border: none; padding: 8px;"
+                        onchange="this.form.submit()"
+                    >
+                </div>
+
+                <div style="flex: 1; display: flex; align-items: center; padding: 0 10px; border-left: 1px solid var(--input-border);">
+                    <label for="start_time" style="color: var(--text-primary); font-size: 14px; margin-right: 8px; white-space: nowrap;">Start Time:</label>
+                    <input
+                        type="time"
+                        name="availability_time"
+                        class="filter-date"
+                        id="start_time"
+                        value="{{ selected_time or '' }}"
+                        style="flex: 1; border: none; padding: 8px;"
+                        onchange="this.form.submit()"
+                    >
+                </div>
+
+                <select name="sort" class="filter-select" style="flex: 1;" onchange="this.form.submit()">
+                    <option value="recent" {% if selected_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                    <option value="most_booked" {% if selected_sort == 'most_booked' %}selected{% endif %}>Most Booked</option>
+                    <option value="top_rated" {% if selected_sort == 'top_rated' %}selected{% endif %}>Top Rated</option>
+                </select>
+
+                <button type="submit" class="btn-filter" style="flex: 1;">Search</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Staff Actions -->
+    {% if current_user.is_authenticated and current_user.role in ['staff', 'admin'] %}
+        <div style="text-align: center; margin-bottom: 30px;">
+            <a href="{{ url_for('resource.create') }}" class="btn-filter">+ Create New Resource</a>
+            <a href="{{ url_for('resource.my_resources') }}" class="btn-filter" style="margin-left: 12px;">My Resources</a>
+        </div>
+    {% endif %}
+
+    <!-- Resources List -->
+    {% if resources %}
+        <div class="resources-list">
+            {% for resource in resources %}
+                <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="resource-item">
+                    <div class="resource-icon">
+                        {% if resource._category_name == 'Study Rooms' %}
+                            <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Light.png') }}" alt="Study Room" class="icon-light">
+                            <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Dark.png') }}" alt="Study Room" class="icon-dark">
+                        {% elif resource._category_name == 'AV Equipment' %}
+                            <img src="{{ url_for('static', filename='images/icons/AV_Equip_Light.png') }}" alt="AV Equipment" class="icon-light">
+                            <img src="{{ url_for('static', filename='images/icons/AV_Equip_Dark.png') }}" alt="AV Equipment" class="icon-dark">
+                        {% elif resource._category_name == 'Lab Instruments' %}
+                            <img src="{{ url_for('static', filename='images/icons/Lab_Light.png') }}" alt="Lab Instruments" class="icon-light">
+                            <img src="{{ url_for('static', filename='images/icons/Lab_Dark.png') }}" alt="Lab Instruments" class="icon-dark">
+                        {% elif resource._category_name == 'Event Spaces' %}
+                            <img src="{{ url_for('static', filename='images/icons/Event_Light.png') }}" alt="Event Spaces" class="icon-light">
+                            <img src="{{ url_for('static', filename='images/icons/Event_Dark.png') }}" alt="Event Spaces" class="icon-dark">
+                        {% elif resource._category_name == 'Computer Labs' %}
+                            <img src="{{ url_for('static', filename='images/icons/Computer_light.png') }}" alt="Computer Labs" class="icon-light">
+                            <img src="{{ url_for('static', filename='images/icons/Computer_Dark.png') }}" alt="Computer Labs" class="icon-dark">
+                        {% endif %}
+                    </div>
+                    <div class="resource-content">
+                        <div class="resource-header">
+                            <h3 class="resource-title">{{ resource.title }}</h3>
+                            {% if resource.status == 'published' %}
+                                <div class="resource-badge available">Available</div>
+                            {% else %}
+                                <div class="resource-badge booked">{{ resource.status|title }}</div>
+                            {% endif %}
+                        </div>
+                        <p class="resource-category">
+                            {{ resource._category_name or 'Uncategorized' }}
+                        </p>
+                        <p class="resource-description">
+                            {{ resource.description[:100] }}{% if resource.description|length > 100 %}...{% endif %}
+                        </p>
+                        <div class="resource-meta">
+                            <span>📍 {{ resource.location }}</span>
+                            {% if resource.capacity %}
+                                {% if resource._category_name in ['Study Rooms', 'Event Spaces', 'Computer Labs'] %}
+                                    <span>👥 Capacity: {{ resource.capacity }}</span>
+                                {% else %}
+                                    <span>📦 Items: {{ resource.capacity }}</span>
+                                {% endif %}
+                            {% endif %}
+                            {% if resource._avg_rating %}
+                                <span>⭐ {{ "%.1f"|format(resource._avg_rating) }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="btn-book">Book</span>
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if total_pages > 1 %}
+            <div class="pagination">
+                {% if page > 1 %}
+                    <a href="?page={{ page - 1 }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_capacity %}&capacity={{ selected_capacity }}{% endif %}{% if selected_date %}&availability_date={{ selected_date }}{% endif %}{% if selected_time %}&availability_time={{ selected_time }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" class="page-btn">← Previous</a>
+                {% endif %}
+
+                <span class="page-btn active">Showing {{ ((page - 1) * per_page + 1) }} - {{ [page * per_page, total_count]|min }} of {{ total_count }} total</span>
+
+                {% if page < total_pages %}
+                    <a href="?page={{ page + 1 }}{% if search_query %}&q={{ search_query }}{% endif %}{% if selected_category %}&category={{ selected_category }}{% endif %}{% if selected_location %}&location={{ selected_location }}{% endif %}{% if selected_capacity %}&capacity={{ selected_capacity }}{% endif %}{% if selected_date %}&availability_date={{ selected_date }}{% endif %}{% if selected_time %}&availability_time={{ selected_time }}{% endif %}{% if selected_sort %}&sort={{ selected_sort }}{% endif %}" class="page-btn">Next →</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="no-results">
+            <h2>No resources found</h2>
+            <p>Try adjusting your search or filters.</p>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// Debounced submit for capacity input with 1-second delay
+let debounceTimer;
+function debouncedSubmit() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(function() {
+        document.getElementById('filterForm').submit();
+    }, 1000);
+}
+</script>
+{% endblock %}

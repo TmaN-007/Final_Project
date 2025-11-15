@@ -308,7 +308,7 @@ class Review:
         if not self._created_at:
             return ''
 
-        # Parse created_at if it's a string
+        # Parse created_at if it's a string (stored in UTC)
         if isinstance(self._created_at, str):
             try:
                 created_datetime = datetime.strptime(self._created_at, '%Y-%m-%d %H:%M:%S')
@@ -317,14 +317,22 @@ class Review:
         else:
             created_datetime = self._created_at
 
-        now = datetime.now()
+        # Use UTC time for comparison since database stores UTC timestamps
+        now = datetime.utcnow()
         delta = now - created_datetime
         days = delta.days
+
+        # Handle negative delta (future timestamps or timezone issues)
+        if delta.total_seconds() < 0:
+            return 'Just now'
 
         if days < 1:
             hours = delta.seconds // 3600
             if hours < 1:
-                return 'Less than an hour ago'
+                minutes = delta.seconds // 60
+                if minutes < 1:
+                    return 'Just now'
+                return f'{minutes} minute{"s" if minutes != 1 else ""} ago'
             return f'{hours} hour{"s" if hours != 1 else ""} ago'
         elif days < 7:
             return f'{days} day{"s" if days != 1 else ""} ago'

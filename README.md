@@ -96,18 +96,30 @@ A full-stack web application enabling university departments, student organizati
 
 ## 🏗️ Architecture (MVC Pattern - Required)
 
-**Model Layer** (`src/models/`)
-- Database models and business logic
+**Model Layer** (`src/models/`) ✅ **Updated 2025-11-11**
+- Database models with OOP encapsulation
+- **All models use @property getters/setters** with validation
+- 80+ properties across 8 model classes
+- Private attributes with domain-specific validation
+- Example: Rating validation (1-5), email format, datetime logic
 
-**View Layer** (`src/views/`)
+**View Layer** (`src/templates/`)
 - Jinja2 templates + Bootstrap 5
+- **Theme-aware design** (light/dark mode toggle)
+- Custom PNG icons for all 5 resource categories
+- Responsive layouts with gradient backgrounds
 
 **Controller Layer** (`src/controllers/`)
 - Flask blueprints and routes
+- Authentication (login, register, password reset) ✅
+- Home page and dashboard ✅
+- Resources, bookings, reviews (in progress)
 
 **Data Access Layer** (`src/data_access/`)
 - Encapsulated CRUD operations
 - No raw SQL in controllers
+- BaseDAL pattern with parameterized queries
+- UserDAL, ResourceDAL, BookingDAL, MessageDAL, ReviewDAL ✅
 
 See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete architecture details.
 
@@ -115,13 +127,16 @@ See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete architecture detai
 
 ## 🔐 Security Features Implemented
 
-- ✅ Bcrypt password hashing required
+- ✅ Bcrypt password hashing (12 rounds minimum)
 - ✅ Email verification tokens
-- ✅ CSRF token management
-- ✅ Session tracking
-- ✅ SQL injection prevention (parameterized queries)
-- ✅ File upload validation
-- ✅ Rate limiting support
+- ✅ CSRF token management (Flask-WTF)
+- ✅ Session tracking with Flask-Login
+- ✅ **Remember Me** functionality (365-day cookies with security flags)
+- ✅ SQL injection prevention (parameterized queries in all DAL methods)
+- ✅ XSS protection (Jinja2 auto-escaping + bleach sanitization)
+- ✅ File upload validation (type, size, path traversal checks)
+- ✅ Password strength requirements (8+ chars, uppercase, lowercase, digit)
+- ✅ Rate limiting support (database tables ready)
 - ✅ Admin audit logs
 
 ---
@@ -185,16 +200,21 @@ See [PROJECT_STRUCTURE.md](PROJECT_STRUCTURE.md) for complete architecture detai
 
 ## ✅ Project Status
 
-| Component | Status |
-|-----------|--------|
-| Database Schema | ✅ Complete |
-| Database Created | ✅ Complete |
-| Documentation | ✅ 60% Complete |
-| Flask App Structure | 📋 Next |
-| Authentication | 📋 Pending |
-| Resources Module | 📋 Pending |
-| Booking Module | 📋 Pending |
-| Testing | 📋 Pending |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Database Schema | ✅ Complete | 30 tables with relationships |
+| Database Created | ✅ Complete | SQLite initialized |
+| **Model Layer** | ✅ **Complete** | **All models with @property encapsulation** |
+| **Data Access Layer** | ✅ **Complete** | **5 DAL classes with validation** |
+| Flask App Structure | ✅ Complete | Factory pattern, blueprints |
+| **Authentication** | ✅ **Complete** | **Login, register, password reset, Remember Me** |
+| **Home Page** | ✅ **Complete** | **Theme toggle, custom icons** |
+| Documentation | ✅ 85% Complete | AI logs, architecture docs |
+| Resources Module | 🔄 In Progress | DAL complete, controller partial |
+| Booking Module | 🔄 In Progress | DAL complete, controller pending |
+| Message/Review System | ✅ Complete | Models and DAL ready |
+| Frontend Templates | 🔄 60% Complete | Auth + home done, resources pending |
+| Testing | 📋 Pending | Unit and integration tests |
 
 ---
 
@@ -214,14 +234,58 @@ All major changes use:
 ✅ MVC architecture
 ✅ Data Access Layer (DAL)
 ✅ 30-table schema
-✅ Security features
-✅ AI-first folder structure
-⏳ Bootstrap 5 frontend
+✅ Security features (CSRF, XSS, SQL injection, password hashing)
+✅ AI-first folder structure (.prompt/ docs)
+✅ Bootstrap 5 frontend with theme support
+✅ **OOP Encapsulation** (property getters/setters with validation)
 ⏳ pytest test suite
 ⏳ AI-powered feature
 
 ---
 
-**Project Status:** 🟢 Foundation Complete - Ready for Development
-**Last Updated:** 2025-11-08
-**Next Milestone:** Create Flask application structure
+## 🎨 Recent Updates
+
+### 2025-11-14: Booking System Bug Fixes
+- ✅ Fixed critical timezone conversion bug (6-hour offset)
+- ✅ Fixed datetime format parsing (ISO vs SQLite formats)
+- ✅ Cancelled bookings no longer block time slots
+- ✅ Past time slots now correctly show as grey (unavailable)
+- ✅ Enhanced calendar display with proper color coding
+- ✅ Added debugging console logs for conflict detection
+- ✅ See [PROGRESS_REPORT.md](PROGRESS_REPORT.md) for detailed fix documentation
+
+### 2025-11-11: OOP Refactoring
+- ✅ All 8 model classes refactored with @property encapsulation
+- ✅ 80+ properties with validation (email format, rating ranges, datetime logic)
+- ✅ Private attributes with getters/setters
+- ✅ Backward compatible with existing DAL code
+
+### 2025-11-11: Theme System
+- ✅ Light/Dark mode toggle with localStorage persistence
+- ✅ Theme-aware custom PNG icons (10 files, 5 categories)
+- ✅ Dual-image CSS pattern for instant switching
+
+### 2025-11-11: Authentication
+- ✅ Remember Me functionality verified (365-day persistent cookies)
+- ✅ Password strength validation
+- ✅ Security flags (httponly, secure) on cookies
+
+---
+
+## 🐛 Known Issues Resolved (2025-11-14)
+
+| Issue | Status | Description |
+|-------|--------|-------------|
+| Timezone offset in bookings | ✅ Fixed | Bookings now preserve local time without UTC conversion |
+| Datetime parsing errors | ✅ Fixed | System handles both ISO and SQLite datetime formats |
+| Cancelled bookings blocking slots | ✅ Fixed | Calendar correctly shows cancelled slots as available |
+| Past slots showing as booked | ✅ Fixed | Past time slots display grey (unavailable) color |
+| Booking submission crashes | ✅ Fixed | Resolved import scoping issue |
+
+For detailed testing procedures, see [TESTING_GUIDE.md](TESTING_GUIDE.md).
+
+---
+
+**Project Status:** 🟢 Booking System Stable - Testing & Polish Phase
+**Last Updated:** 2025-11-14
+**Next Milestone:** Comprehensive testing and additional feature polish

@@ -59,8 +59,12 @@ class Booking:
         """Parse datetime string from database."""
         if isinstance(dt_string, datetime):
             return dt_string
-        # SQLite datetime format: 'YYYY-MM-DD HH:MM:SS'
-        return datetime.strptime(dt_string, '%Y-%m-%d %H:%M:%S')
+        # Try ISO format first (with 'T' separator): 'YYYY-MM-DDTHH:MM:SS'
+        try:
+            return datetime.fromisoformat(dt_string.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            # Fall back to SQLite format: 'YYYY-MM-DD HH:MM:SS'
+            return datetime.strptime(dt_string, '%Y-%m-%d %H:%M:%S')
 
     # Property getters and setters
     @property
@@ -395,7 +399,12 @@ class BookingWaitlist:
         """Parse datetime string from database."""
         if isinstance(dt_string, datetime):
             return dt_string
-        return datetime.strptime(dt_string, '%Y-%m-%d %H:%M:%S')
+        # Try ISO format first (with 'T' separator): 'YYYY-MM-DDTHH:MM:SS'
+        try:
+            return datetime.fromisoformat(dt_string.replace('Z', '+00:00'))
+        except (ValueError, AttributeError):
+            # Fall back to SQLite format: 'YYYY-MM-DD HH:MM:SS'
+            return datetime.strptime(dt_string, '%Y-%m-%d %H:%M:%S')
 
     # Property getters and setters
     @property

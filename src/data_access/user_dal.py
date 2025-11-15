@@ -118,7 +118,7 @@ class UserDAL(BaseDAL):
             password (str): Plain text password
 
         Returns:
-            Optional[Dict]: User data if credentials valid, None otherwise
+            Optional[Dict]: User data if credentials valid and not banned, None otherwise
 
         Example:
             >>> user = UserDAL.verify_password('john@iu.edu', 'password123')
@@ -128,6 +128,9 @@ class UserDAL(BaseDAL):
         user = cls.get_user_by_email(email)
 
         if user and check_password_hash(user['password_hash'], password):
+            # Check if user is banned
+            if user.get('is_banned', False):
+                return None
             return user
 
         return None
@@ -361,8 +364,228 @@ class UserDAL(BaseDAL):
         """
         return cls.execute_query(query, (limit, offset))
 
-    # TODO: Implement additional methods as needed:
-    # - get_users_by_department()
-    # - search_users()
-    # - get_user_statistics()
-    # - deactivate_user()
+    # =============================================================================
+    # ADMIN PANEL METHODS
+    # =============================================================================
+
+    @classmethod
+    def count_all_users(cls) -> int:
+        """Count total number of users."""
+        query = "SELECT COUNT(*) as count FROM users"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def count_active_users(cls) -> int:
+        """Count users with verified email (active)."""
+        query = "SELECT COUNT(*) as count FROM users WHERE email_verified = 1"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def count_pending_users(cls) -> int:
+        """Count users with unverified email (pending)."""
+        query = "SELECT COUNT(*) as count FROM users WHERE email_verified = 0"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def get_recent_users(cls, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get recently registered users."""
+        query = """
+            SELECT user_id, name, email, role, email_verified, is_banned,
+                   datetime(last_login, 'localtime') as last_login,
+                   datetime(created_at, 'localtime') as created_at
+            FROM users
+            ORDER BY created_at DESC
+            LIMIT ?
+        """
+        results = cls.execute_query(query, (limit,))
+        # Add computed 'status' field for template compatibility
+        for user in results:
+            if user.get('is_banned'):
+                user['status'] = 'banned'
+            else:
+                user['status'] = 'active'
+        return results
+
+    @classmethod
+    def get_all_users_paginated(cls, page: int = 1, per_page: int = 20,
+                                 role_filter: str = '', status_filter: str = '',
+                                 search_query: str = '') -> Dict[str, Any]:
+        """
+        Get paginated list of users with optional filters.
+
+        Args:
+            page: Page number (1-indexed)
+            per_page: Number of items per page
+            role_filter: Filter by role ('student', 'staff', 'admin')
+            status_filter: Filter by email verification ('active'=verified, 'pending'=unverified, 'inactive'=unverified)
+            search_query: Search in name or email
+
+        Returns:
+            Dict with 'users' list and 'pagination' info
+        """
+        offset = (page - 1) * per_page
+
+        # Build WHERE clause dynamically
+        where_clauses = []
+        params = []
+
+        if role_filter:
+            where_clauses.append("role = ?")
+            params.append(role_filter)
+
+        if status_filter:
+            # Map status filter to is_banned
+            if status_filter == 'active':
+                where_clauses.append("is_banned = 0")
+            elif status_filter == 'banned':
+                where_clauses.append("is_banned = 1")
+
+        if search_query:
+            where_clauses.append("(name LIKE ? OR email LIKE ?)")
+            search_pattern = f'%{search_query}%'
+            params.extend([search_pattern, search_pattern])
+
+        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+        # Get total count
+        count_query = f"SELECT COUNT(*) as count FROM users WHERE {where_sql}"
+        total_result = cls.execute_query(count_query, tuple(params))
+        total_count = total_result[0]['count'] if total_result else 0
+
+        # Get users
+        query = f"""
+            SELECT user_id, name, email, role, email_verified, is_banned,
+                   datetime(last_login, 'localtime') as last_login,
+                   datetime(created_at, 'localtime') as created_at
+            FROM users
+            WHERE {where_sql}
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        """
+        params.extend([per_page, offset])
+        users = cls.execute_query(query, tuple(params))
+
+        # Add computed 'status' field for template compatibility
+        for user in users:
+            if user.get('is_banned'):
+                user['status'] = 'banned'
+            else:
+                user['status'] = 'active'
+
+        # Calculate pagination info
+        total_pages = (total_count + per_page - 1) // per_page
+
+        return {
+            'users': users,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_prev': page > 1,
+                'has_next': page < total_pages
+            }
+        }
+
+    @classmethod
+    def update_user_status(cls, user_id: int, status: str) -> bool:
+        """
+        Update user email verification status (active, inactive, pending).
+
+        Args:
+            user_id: User ID
+            status: New status ('active'=verified, 'inactive'/'pending'=unverified)
+
+        Returns:
+            bool: True if successful
+        """
+        # Map status to email_verified boolean
+        email_verified = 1 if status == 'active' else 0
+
+        query = """
+            UPDATE users
+            SET email_verified = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """
+        cls.execute_update(query, (email_verified, user_id))
+        return True
+
+    @classmethod
+    def update_user_role(cls, user_id: int, role: str) -> bool:
+        """
+        Update user role.
+
+        Args:
+            user_id: User ID
+            role: New role ('student', 'staff', 'admin')
+
+        Returns:
+            bool: True if successful
+        """
+        query = """
+            UPDATE users
+            SET role = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """
+        cls.execute_update(query, (role, user_id))
+        return True
+
+    @classmethod
+    def ban_user(cls, user_id: int) -> bool:
+        """
+        Ban a user from accessing the system.
+
+        Args:
+            user_id: User ID to ban
+
+        Returns:
+            bool: True if successful
+        """
+        query = """
+            UPDATE users
+            SET is_banned = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """
+        cls.execute_update(query, (user_id,))
+        return True
+
+    @classmethod
+    def unban_user(cls, user_id: int) -> bool:
+        """
+        Unban a user, allowing them to access the system again.
+
+        Args:
+            user_id: User ID to unban
+
+        Returns:
+            bool: True if successful
+        """
+        query = """
+            UPDATE users
+            SET is_banned = 0, updated_at = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """
+        cls.execute_update(query, (user_id,))
+        return True
+
+    @classmethod
+    def update_last_login(cls, user_id: int) -> bool:
+        """
+        Update user's last login timestamp.
+
+        Args:
+            user_id: User ID
+
+        Returns:
+            bool: True if successful
+        """
+        query = """
+            UPDATE users
+            SET last_login = CURRENT_TIMESTAMP
+            WHERE user_id = ?
+        """
+        cls.execute_update(query, (user_id,))
+        return True

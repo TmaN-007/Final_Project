@@ -231,7 +231,16 @@ class BookingDAL(BaseDAL):
         """
         query = """
             SELECT
-                b.*,
+                b.booking_id,
+                b.resource_id,
+                b.requester_id,
+                b.start_datetime,
+                b.end_datetime,
+                b.start_datetime as start_time,
+                b.end_datetime as end_time,
+                b.status,
+                b.created_at,
+                b.updated_at,
                 r.title as resource_title,
                 r.location as resource_location,
                 r.category_id
@@ -246,9 +255,21 @@ class BookingDAL(BaseDAL):
             params.append(status)
 
         if upcoming_only:
-            query += " AND b.end_datetime > datetime('now')"
+            query += " AND b.end_datetime > datetime('now') AND b.status NOT IN ('completed', 'cancelled')"
 
-        query += " ORDER BY b.start_datetime DESC LIMIT ? OFFSET ?"
+        # Order by status first (approved, then completed), then by latest bookings within each status
+        query += """
+            ORDER BY
+                CASE b.status
+                    WHEN 'approved' THEN 1
+                    WHEN 'completed' THEN 2
+                    WHEN 'pending' THEN 3
+                    WHEN 'cancelled' THEN 4
+                    ELSE 5
+                END,
+                b.created_at DESC
+            LIMIT ? OFFSET ?
+        """
         params.extend([limit, offset])
 
         return cls.execute_query(query, tuple(params))
@@ -678,6 +699,330 @@ class BookingDAL(BaseDAL):
             ORDER BY w.created_at ASC
         """
         return cls.execute_query(query, (resource_id,))
+
+    # =============================================================================
+    # ADMIN PANEL METHODS
+    # =============================================================================
+
+    @classmethod
+    def count_all_bookings(cls) -> int:
+        """
+        Count total number of bookings.
+
+        Returns:
+            Total count of bookings
+        """
+        query = "SELECT COUNT(*) as count FROM bookings"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def count_pending_bookings(cls) -> int:
+        """
+        Count bookings with pending status.
+
+        Returns:
+            Count of pending bookings
+        """
+        query = "SELECT COUNT(*) as count FROM bookings WHERE status = 'pending'"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def count_bookings_by_user(
+        cls,
+        user_id: int,
+        status: Optional[str] = None,
+        upcoming_only: bool = False
+    ) -> int:
+        """
+        Count total bookings for a user with optional filters.
+
+        Args:
+            user_id (int): User ID
+            status (Optional[str]): Filter by status
+            upcoming_only (bool): Only count future bookings
+
+        Returns:
+            int: Total count of matching bookings
+        """
+        query = "SELECT COUNT(*) as count FROM bookings WHERE requester_id = ?"
+        params = [user_id]
+
+        if status:
+            query += " AND status = ?"
+            params.append(status)
+
+        if upcoming_only:
+            query += " AND end_datetime > datetime('now') AND status NOT IN ('completed', 'cancelled')"
+
+        result = cls.execute_query(query, tuple(params))
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def get_recent_bookings(cls, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get recently created bookings.
+
+        Args:
+            limit: Maximum number of bookings to return
+
+        Returns:
+            List of booking dicts with user and resource info
+        """
+        query = """
+            SELECT b.booking_id, b.status, b.start_datetime as start_time,
+                   b.end_datetime as end_time, b.created_at, b.requester_id as user_id,
+                   b.resource_id, u.name as user_name, u.email as user_email,
+                   r.title as resource_title, rc.name as resource_category
+            FROM bookings b
+            LEFT JOIN users u ON b.requester_id = u.user_id
+            LEFT JOIN resources r ON b.resource_id = r.resource_id
+            LEFT JOIN resource_categories rc ON r.category_id = rc.category_id
+            ORDER BY b.created_at DESC
+            LIMIT ?
+        """
+        return cls.execute_query(query, (limit,))
+
+    @classmethod
+    def get_all_bookings_paginated(cls, page: int = 1, per_page: int = 20,
+                                    status_filter: str = '', user_id: int = None,
+                                    resource_id: int = None, search_query: str = '',
+                                    booking_id: str = '') -> Dict[str, Any]:
+        """
+        Get paginated list of bookings with optional filters.
+
+        Args:
+            page: Page number (1-indexed)
+            per_page: Number of items per page
+            status_filter: Filter by status ('pending', 'confirmed', 'completed', 'cancelled')
+            user_id: Filter by user ID
+            resource_id: Filter by resource ID
+            search_query: Search in user name, email, or resource title
+            booking_id: Filter by exact booking ID
+
+        Returns:
+            Dict with 'bookings' list and 'pagination' info
+        """
+        offset = (page - 1) * per_page
+
+        # Build WHERE clause dynamically
+        where_clauses = []
+        params = []
+
+        if status_filter:
+            where_clauses.append("b.status = ?")
+            params.append(status_filter)
+
+        if user_id:
+            where_clauses.append("b.requester_id = ?")
+            params.append(user_id)
+
+        if resource_id:
+            where_clauses.append("b.resource_id = ?")
+            params.append(resource_id)
+
+        # Exact booking ID filter takes priority
+        if booking_id:
+            where_clauses.append("b.booking_id = ?")
+            params.append(int(booking_id))
+        elif search_query:
+            # General search in user name, email, or resource title
+            where_clauses.append("(u.name LIKE ? OR u.email LIKE ? OR r.title LIKE ?)")
+            search_pattern = f'%{search_query}%'
+            params.extend([search_pattern, search_pattern, search_pattern])
+
+        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+        # Get total count
+        count_query = f"""
+            SELECT COUNT(*) as count
+            FROM bookings b
+            LEFT JOIN users u ON b.requester_id = u.user_id
+            LEFT JOIN resources r ON b.resource_id = r.resource_id
+            WHERE {where_sql}
+        """
+        total_result = cls.execute_query(count_query, tuple(params))
+        total_count = total_result[0]['count'] if total_result else 0
+
+        # Get bookings
+        query = f"""
+            SELECT b.booking_id, b.status, b.start_datetime as start_time,
+                   b.end_datetime as end_time, b.created_at, b.updated_at,
+                   b.requester_id as user_id, b.resource_id,
+                   u.name as user_name, u.email as user_email,
+                   r.title as resource_title, rc.name as resource_category
+            FROM bookings b
+            LEFT JOIN users u ON b.requester_id = u.user_id
+            LEFT JOIN resources r ON b.resource_id = r.resource_id
+            LEFT JOIN resource_categories rc ON r.category_id = rc.category_id
+            WHERE {where_sql}
+            ORDER BY b.created_at DESC
+            LIMIT ? OFFSET ?
+        """
+        params.extend([per_page, offset])
+        bookings = cls.execute_query(query, tuple(params))
+
+        # Calculate pagination info
+        total_pages = (total_count + per_page - 1) // per_page
+
+        return {
+            'bookings': bookings,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_prev': page > 1,
+                'has_next': page < total_pages
+            }
+        }
+
+    @classmethod
+    def admin_cancel_booking(cls, booking_id: int, admin_notes: str = '') -> bool:
+        """
+        Cancel a booking (admin only).
+
+        Args:
+            booking_id: Booking ID
+            admin_notes: Optional notes about the cancellation
+
+        Returns:
+            True if cancellation successful, False otherwise
+        """
+        query = """
+            UPDATE bookings
+            SET status = 'cancelled',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE booking_id = ?
+        """
+        rows_affected = cls.execute_update(query, (booking_id,))
+
+        # If admin_notes provided, you might want to log it somewhere
+        # For now, just return success status
+        return rows_affected > 0
+
+    @classmethod
+    def auto_complete_past_bookings(cls) -> int:
+        """
+        Automatically mark approved bookings as completed if their end time has passed.
+        Sends system notifications to users for completed bookings.
+
+        Returns:
+            int: Number of bookings updated
+        """
+        # First, get the bookings that will be completed
+        select_query = """
+            SELECT b.booking_id, b.requester_id, b.resource_id, r.title as resource_title
+            FROM bookings b
+            LEFT JOIN resources r ON b.resource_id = r.resource_id
+            WHERE b.status = 'approved'
+              AND datetime(b.end_datetime) < datetime('now')
+        """
+        completed_bookings = cls.execute_query(select_query, ())
+
+        # Update their status
+        update_query = """
+            UPDATE bookings
+            SET status = 'completed',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE status = 'approved'
+              AND datetime(end_datetime) < datetime('now')
+        """
+        rows_affected = cls.execute_update(update_query, ())
+
+        # Send system notifications for each completed booking
+        if completed_bookings:
+            try:
+                from src.utils import system_messaging
+                for booking_data in completed_bookings:
+                    try:
+                        system_messaging.notify_booking_completed(
+                            booking_id=booking_data['booking_id'],
+                            user_id=booking_data['requester_id'],
+                            resource_title=booking_data.get('resource_title', 'Resource'),
+                            resource_id=booking_data['resource_id']
+                        )
+                    except Exception as e:
+                        print(f"Failed to send completion notification for booking {booking_data['booking_id']}: {e}")
+            except Exception as e:
+                print(f"Failed to import system_messaging: {e}")
+
+        return rows_affected
+
+    @classmethod
+    def cancel_bookings_by_resource(cls, resource_id: int) -> int:
+        """
+        Cancel all active (pending and approved) bookings for a specific resource.
+        Used when a resource is archived or deleted.
+        Sends system notifications to affected users.
+
+        Args:
+            resource_id: Resource ID whose bookings should be cancelled
+
+        Returns:
+            int: Number of bookings cancelled
+        """
+        # First, get affected bookings grouped by user
+        select_query = """
+            SELECT b.requester_id, COUNT(*) as booking_count, r.title as resource_title
+            FROM bookings b
+            LEFT JOIN resources r ON b.resource_id = r.resource_id
+            WHERE b.resource_id = ?
+              AND b.status IN ('pending', 'approved')
+            GROUP BY b.requester_id, r.title
+        """
+        affected_users = cls.execute_query(select_query, (resource_id,))
+
+        # Cancel the bookings
+        update_query = """
+            UPDATE bookings
+            SET status = 'cancelled',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE resource_id = ?
+              AND status IN ('pending', 'approved')
+        """
+        rows_affected = cls.execute_update(update_query, (resource_id,))
+
+        # Send system notifications to affected users
+        if affected_users:
+            try:
+                from src.utils import system_messaging
+                for user_data in affected_users:
+                    try:
+                        system_messaging.notify_resource_archived(
+                            user_id=user_data['requester_id'],
+                            resource_title=user_data.get('resource_title', 'Resource'),
+                            affected_bookings_count=user_data['booking_count']
+                        )
+                    except Exception as e:
+                        print(f"Failed to send archival notification to user {user_data['requester_id']}: {e}")
+            except Exception as e:
+                print(f"Failed to import system_messaging: {e}")
+
+        return rows_affected
+
+    @classmethod
+    def cancel_bookings_by_user(cls, user_id: int) -> int:
+        """
+        Cancel all active (pending and approved) bookings for a specific user.
+        Used when a user is banned.
+
+        Args:
+            user_id: User ID whose bookings should be cancelled
+
+        Returns:
+            int: Number of bookings cancelled
+        """
+        query = """
+            UPDATE bookings
+            SET status = 'cancelled',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE requester_id = ?
+              AND status IN ('pending', 'approved')
+        """
+        rows_affected = cls.execute_update(query, (user_id,))
+        return rows_affected
 
     # TODO: Implement additional methods as needed:
     # - get_booking_statistics()

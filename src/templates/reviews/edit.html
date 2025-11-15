@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Review - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Review Edit Page Styles */
+    .review-edit-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .review-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .review-card {
+        background: rgba(30, 30, 30, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(153, 9, 221, 0.3);
+        border-radius: 16px;
+        padding: 40px;
+    }
+
+    [data-theme="light"] .review-card {
+        background: rgba(255, 255, 255, 0.9);
+        border-color: rgba(153, 9, 221, 0.2);
+    }
+
+    .review-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        color: #fff;
+    }
+
+    [data-theme="light"] .review-title {
+        color: #1a1a1a;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        display: block;
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .star-rating-input {
+        display: flex;
+        gap: 8px;
+        font-size: 2.5rem;
+        cursor: pointer;
+        margin-bottom: 8px;
+    }
+
+    .star {
+        color: rgba(251, 191, 36, 0.3);
+        transition: all 0.2s ease;
+        user-select: none;
+    }
+
+    .star.filled {
+        color: #fbbf24;
+    }
+
+    .star:hover {
+        transform: scale(1.1);
+    }
+
+    .form-control {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        resize: vertical;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .help-text {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-quaternary);
+        margin-top: 4px;
+    }
+
+    .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .btn-cancel {
+        background: rgba(63, 11, 147, 0.4);
+        border: 1px solid rgba(153, 9, 221, 0.5);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(63, 11, 147, 0.6);
+        border-color: rgba(153, 9, 221, 0.8);
+        color: #fff;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+        transform: translateX(-4px);
+    }
+
+    .resource-info {
+        background: rgba(153, 9, 221, 0.1);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        font-family: 'Actor', sans-serif;
+        color: var(--text-secondary);
+    }
+
+    .resource-name {
+        font-weight: 600;
+        color: var(--accent-purple);
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="review-edit-page">
+    <div class="review-container">
+        <!-- Back Link -->
+        <a href="{{ url_for('resource.detail', resource_id=review.resource_id) }}" class="back-link">
+            ← Back to Resource
+        </a>
+
+        <!-- Review Form Card -->
+        <div class="review-card">
+            <h1 class="review-title">Edit Your Review</h1>
+
+            <!-- Resource Info -->
+            <div class="resource-info">
+                <div class="resource-name">{{ review.resource_title or 'Resource' }}</div>
+            </div>
+
+            <!-- Review Form -->
+            <form method="POST" action="{{ url_for('review.edit', review_id=review.review_id) }}">
+                {{ form.hidden_tag() }}
+
+                <!-- Rating -->
+                <div class="form-group">
+                    <label class="form-label">Rating</label>
+                    <div class="star-rating-input" id="star-rating">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                    {{ form.rating(style="display: none;") }}
+                    {% if form.rating.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                            {{ form.rating.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Comment -->
+                <div class="form-group">
+                    {{ form.comment.label(class="form-label") }}
+                    {{ form.comment(class="form-control", rows="6", placeholder="Share your experience with this resource (minimum 20 characters)...") }}
+                    <div class="help-text">Minimum 20 characters, maximum 1000 characters</div>
+                    {% if form.comment.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                            {{ form.comment.errors[0] }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Hidden Fields -->
+                {{ form.booking_id() }}
+                {{ form.resource_id() }}
+
+                <!-- Button Group -->
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">Update Review</button>
+                    <a href="{{ url_for('resource.detail', resource_id=review.resource_id) }}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Star rating interaction
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating');
+    let currentRating = {{ form.rating.data or 0 }};
+
+    // Initialize stars based on existing rating
+    function setStars(rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.add('filled');
+            } else {
+                star.classList.remove('filled');
+            }
+        });
+    }
+
+    // Set initial rating
+    setStars(currentRating);
+
+    // Click handler
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            currentRating = parseInt(this.dataset.value);
+            ratingInput.value = currentRating;
+            setStars(currentRating);
+        });
+
+        // Hover effect
+        star.addEventListener('mouseenter', function() {
+            const hoverValue = parseInt(this.dataset.value);
+            setStars(hoverValue);
+        });
+    });
+
+    // Reset to current rating on mouse leave
+    const ratingContainer = document.getElementById('star-rating');
+    ratingContainer.addEventListener('mouseleave', function() {
+        setStars(currentRating);
+    });
+});
+</script>
+{% endblock %}

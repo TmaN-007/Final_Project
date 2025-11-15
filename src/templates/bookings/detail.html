@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Details - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Booking Detail Page Styles */
+    .booking-detail-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .detail-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+        transform: translateX(-4px);
+    }
+
+    .booking-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 20px;
+    }
+
+    .booking-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 500;
+        margin-bottom: 20px;
+    }
+
+    .status-badge.approved {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .status-badge.pending {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid rgba(251, 191, 36, 0.5);
+    }
+
+    .status-badge.rejected {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .status-badge.cancelled {
+        background: rgba(107, 114, 128, 0.2);
+        color: #6b7280;
+        border: 1px solid rgba(107, 114, 128, 0.5);
+    }
+
+    .status-badge.completed {
+        background: rgba(59, 130, 246, 0.2);
+        color: #3b82f6;
+        border: 1px solid rgba(59, 130, 246, 0.5);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .detail-item {
+        font-family: 'Actor', sans-serif;
+    }
+
+    .detail-label {
+        font-size: 0.9rem;
+        color: var(--text-quaternary);
+        margin-bottom: 4px;
+    }
+
+    .detail-value {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .actions-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 24px;
+    }
+
+    .btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-cancel-booking {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-cancel-booking:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-approve {
+        background: rgba(34, 197, 94, 0.2);
+        color: #22c55e;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+    }
+
+    .btn-approve:hover {
+        background: rgba(34, 197, 94, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+    }
+
+    .btn-reject {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+
+    .btn-reject:hover {
+        background: rgba(239, 68, 68, 0.3);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    }
+
+    /* Note: Edit booking functionality is not implemented.
+       Users should cancel and create a new booking to change details. */
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-detail-page">
+    <div class="detail-container">
+        <a href="{{ url_for('booking.index') }}" class="back-link">← Back to My Bookings</a>
+
+        <div class="booking-card">
+            <h1 class="booking-title">{{ booking.resource_title }}</h1>
+            <div class="status-badge {{ booking.status }}">{{ booking.status|title }}</div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <div class="detail-label">Date</div>
+                    <div class="detail-value utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-date-only>📅 {{ booking.start_datetime.strftime('%B %d, %Y') }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Time</div>
+                    <div class="detail-value">🕐 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>{{ booking.start_datetime.strftime('%I:%M %p') }}</span> - <span class="utc-time" data-utc="{{ booking.end_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>{{ booking.end_datetime.strftime('%I:%M %p') }}</span></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Duration</div>
+                    <div class="detail-value">⏱️ {{ booking.get_duration_string() }}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Location</div>
+                    <div class="detail-value">📍 {{ booking._resource_location or 'TBD' }}</div>
+                </div>
+            </div>
+
+            {% if booking.notes %}
+                <div class="detail-item" style="margin-top: 20px;">
+                    <div class="detail-label">Notes</div>
+                    <div class="detail-value" style="font-weight: normal;">{{ booking.notes }}</div>
+                </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="actions-group">
+                {% if cancel_form %}
+                    <form method="POST" action="{{ url_for('booking.cancel', booking_id=booking.booking_id) }}" style="display: inline;">
+                        {{ cancel_form.hidden_tag() }}
+                        <button type="submit" class="btn btn-cancel-booking" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                            Cancel Booking
+                        </button>
+                    </form>
+                {% endif %}
+
+                {% if approval_form %}
+                    <form method="POST" action="{{ url_for('booking.approve', booking_id=booking.booking_id) }}" style="display: inline;">
+                        {{ approval_form.hidden_tag() }}
+                        {{ approval_form.booking_id }}
+                        <input type="hidden" name="action" value="approved">
+                        <button type="submit" class="btn btn-approve">
+                            Approve
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('booking.approve', booking_id=booking.booking_id) }}" style="display: inline;">
+                        {{ approval_form.hidden_tag() }}
+                        {{ approval_form.booking_id }}
+                        <input type="hidden" name="action" value="rejected">
+                        <button type="submit" class="btn btn-reject">
+                            Reject
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

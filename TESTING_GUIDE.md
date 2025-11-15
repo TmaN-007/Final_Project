@@ -456,5 +456,214 @@ Add test results here as you test:
 
 ---
 
-**Last Updated:** 2025-11-08
-**Status:** Ready for local testing (after pip install)
+---
+
+## 🧪 BOOKING SYSTEM TESTING (Added 2025-11-14)
+
+### Critical Test Cases for Timezone Handling
+
+#### Test Case 1: Local Time Preservation
+**Objective:** Verify booking times match user-selected local time without UTC conversion
+
+**Steps:**
+1. Navigate to a resource detail page with calendar
+2. Select a specific time slot (e.g., 6:00 AM - 8:00 AM)
+3. Submit the booking form
+4. Navigate to "My Bookings" page
+5. Verify the displayed time matches the selected time (6:00 AM - 8:00 AM)
+
+**Expected Result:** Booking shows exact time selected, no 6-hour offset or timezone conversion
+
+**Database Verification:**
+```bash
+sqlite3 campus_resource_hub.db "SELECT booking_id, start_datetime, end_datetime FROM bookings ORDER BY booking_id DESC LIMIT 1;"
+```
+Should show: `2025-11-14 06:00:00` (not UTC-converted time)
+
+---
+
+#### Test Case 2: Cancelled Booking Calendar Update
+**Objective:** Verify cancelled bookings no longer block time slots
+
+**Steps:**
+1. Create a booking for 2:00 PM - 4:00 PM on a future date
+2. Verify the time slot shows as red (booked) on calendar
+3. Navigate to "My Bookings" and cancel the booking
+4. Return to the resource calendar
+5. Refresh the page if necessary
+
+**Expected Result:**
+- Time slot changes from red (booked) to green (available)
+- Slot can be booked again by same or different user
+
+**API Verification:**
+```bash
+curl http://localhost:5001/bookings/calendar-data/<resource_id>
+```
+Cancelled bookings should NOT appear in response
+
+---
+
+#### Test Case 3: Past Slot Color Coding
+**Objective:** Verify past time slots show as grey (unavailable), not red (booked)
+
+**Steps:**
+1. Navigate to a resource detail page
+2. Use week navigation to go back to previous weeks
+3. Observe color coding of past time slots
+4. Note: Some past slots may have had bookings
+
+**Expected Result:**
+- All past slots show grey color (class: `unavailable`)
+- Past slots are disabled (not clickable)
+- No past slots show red (booked) color
+- Hover text shows "This time has passed" or similar
+
+**Visual Check:**
+```
+Grey slot = Unavailable (past or beyond max window)
+Red slot = Booked (future/current active booking)
+Green slot = Available for booking
+Amber slot = Beyond maximum booking window
+```
+
+---
+
+#### Test Case 4: Booking Conflict Detection
+**Objective:** Verify system correctly detects and prevents overlapping bookings
+
+**Test 4a: Exact Overlap**
+1. Create booking: 2:00 PM - 4:00 PM
+2. Try to create another booking: 2:00 PM - 4:00 PM
+3. Expected: Error message "Selected time slot is not available"
+
+**Test 4b: Partial Overlap (Start)**
+1. Existing booking: 2:00 PM - 4:00 PM
+2. Try to book: 1:00 PM - 3:00 PM (overlaps end)
+3. Expected: Conflict detected, booking rejected
+
+**Test 4c: Partial Overlap (End)**
+1. Existing booking: 2:00 PM - 4:00 PM
+2. Try to book: 3:00 PM - 5:00 PM (overlaps start)
+3. Expected: Conflict detected, booking rejected
+
+**Test 4d: Complete Enclosure**
+1. Existing booking: 2:00 PM - 4:00 PM
+2. Try to book: 1:00 PM - 5:00 PM (completely contains existing)
+3. Expected: Conflict detected, booking rejected
+
+**Test 4e: Adjacent Slots (Should Succeed)**
+1. Existing booking: 2:00 PM - 4:00 PM
+2. Try to book: 4:00 PM - 6:00 PM (starts when other ends)
+3. Expected: Booking succeeds (no overlap)
+
+**Test 4f: Different Days (Should Succeed)**
+1. Existing booking: Monday 2:00 PM - 4:00 PM
+2. Try to book: Tuesday 2:00 PM - 4:00 PM
+3. Expected: Booking succeeds (different days)
+
+---
+
+#### Test Case 5: Multi-Week Calendar Navigation
+**Objective:** Verify calendar correctly displays bookings across multiple weeks
+
+**Steps:**
+1. Navigate to resource detail page
+2. Current week displays by default
+3. Click "Next Week" button multiple times
+4. Create booking 3 weeks in future
+5. Navigate back to current week
+6. Navigate forward again to week with booking
+
+**Expected Result:**
+- Week navigation updates URL parameter (?week=YYYY-MM-DD)
+- Booking shows correctly in its week
+- Past weeks show grey slots
+- Future weeks show availability correctly
+- Browser back/forward buttons work with week navigation
+
+---
+
+#### Test Case 6: Datetime Format Parsing
+**Objective:** Verify system handles both ISO and SQLite datetime formats
+
+**Database Setup:**
+```bash
+# Insert booking with ISO format
+sqlite3 campus_resource_hub.db "INSERT INTO bookings (user_id, resource_id, start_datetime, end_datetime, status, created_at, updated_at) VALUES (1, 1, '2025-11-20T10:00:00', '2025-11-20T12:00:00', 'approved', datetime('now'), datetime('now'));"
+
+# Insert booking with SQLite format
+sqlite3 campus_resource_hub.db "INSERT INTO bookings (user_id, resource_id, start_datetime, end_datetime, status, created_at, updated_at) VALUES (1, 1, '2025-11-21 14:00:00', '2025-11-21 16:00:00', 'approved', datetime('now'), datetime('now'));"
+```
+
+**Steps:**
+1. Navigate to "My Bookings" page
+2. Verify both bookings display without errors
+3. Check that datetime parsing doesn't crash
+
+**Expected Result:**
+- Both bookings display correctly
+- No ValueError exceptions
+- Times display in readable format
+
+---
+
+### Debugging Console Logs
+
+When testing booking availability, open browser Developer Tools (F12) and check Console for:
+
+**Booking Fetch Log:**
+```javascript
+Fetched bookings: [{booking_id: 3, start_datetime: "2025-11-15T14:00:00", ...}]
+```
+
+**Conflict Detection Log:**
+```javascript
+Slot marked as booked: {
+  slotStart: "2025-11-15T14:00:00.000Z",
+  slotEnd: "2025-11-15T14:30:00.000Z",
+  bookingStart: "2025-11-15T14:00:00.000Z",
+  bookingEnd: "2025-11-15T18:00:00.000Z"
+}
+```
+
+These logs help diagnose issues with:
+- API returning wrong data
+- Timezone conversion problems
+- Overlap detection logic errors
+
+---
+
+### Known Issues Resolved (2025-11-14)
+
+| Issue | Status | Fix Location |
+|-------|--------|--------------|
+| ValueError: datetime format mismatch | ✅ Fixed | [src/models/booking.py:58-67](src/models/booking.py#L58-L67) |
+| 6-hour timezone offset in bookings | ✅ Fixed | [src/templates/resources/detail.html:989-996](src/templates/resources/detail.html#L989-L996) |
+| Cancelled bookings block slots | ✅ Fixed | [src/controllers/booking_controller.py:567-569](src/controllers/booking_controller.py#L567-L569) |
+| Past slots show as red (booked) | ✅ Fixed | [src/templates/resources/detail.html:1090-1104](src/templates/resources/detail.html#L1090-L1104) |
+| UnboundLocalError in booking submission | ✅ Fixed | [src/controllers/resource_controller.py:202](src/controllers/resource_controller.py#L202) |
+
+---
+
+### Regression Testing Checklist
+
+After any changes to booking system, verify:
+
+- [ ] User can create bookings without errors
+- [ ] Booking times match selected slots (no timezone conversion)
+- [ ] Cancelled bookings no longer show as "booked" on calendar
+- [ ] Past time slots show grey (unavailable), not red (booked)
+- [ ] Conflict detection prevents overlapping bookings
+- [ ] Adjacent time slots can be booked separately
+- [ ] Week navigation works forward and backward
+- [ ] "My Bookings" page displays all user bookings
+- [ ] Booking cancellation updates calendar immediately
+- [ ] Multiple bookings for same resource on different days work
+- [ ] Browser console shows no JavaScript errors
+- [ ] Database stores datetime in correct format
+
+---
+
+**Last Updated:** 2025-11-14
+**Status:** Ready for local testing with booking system fixes verified

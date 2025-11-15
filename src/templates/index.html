@@ -118,9 +118,14 @@
             <!-- Center: Navigation Links -->
             <div class="navbar-center">
                 <a href="{{ url_for('main.index') }}" class="nav-link active">Home</a>
-                <a href="{{ url_for('main.search') }}" class="nav-link">Browse Resources</a>
-                <a href="#" class="nav-link">My Bookings</a>
-                <a href="#" class="nav-link">Messages</a>
+                <a href="{{ url_for('resource.index') }}" class="nav-link">Browse Resources</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('booking.index') }}" class="nav-link">My Bookings</a>
+                    <a href="{{ url_for('message.inbox') }}" class="nav-link">Messages</a>
+                    {% if current_user.role in ['staff', 'admin'] %}
+                        <a href="{{ url_for('booking.pending_approvals') }}" class="nav-link">Approvals</a>
+                    {% endif %}
+                {% endif %}
             </div>
 
             <!-- Right: Theme Toggle and Account -->
@@ -225,7 +230,7 @@
 
                 <!-- Search Bar -->
                 <div class="search-container">
-                    <form action="{{ url_for('main.search') }}" method="GET" class="search-form">
+                    <form action="{{ url_for('resource.index') }}" method="GET" class="search-form">
                         <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <circle cx="11" cy="11" r="8"/>
                             <path d="m21 21-4.35-4.35"/>
@@ -289,35 +294,35 @@
         <section class="categories-section">
             <h2 class="section-title">Browse by Category</h2>
             <div class="categories-grid">
-                <a href="#" class="category-card">
+                <a href="{{ url_for('resource.index', category=1) }}" class="category-card">
                     <div class="category-icon">📚</div>
                     <h3 class="category-name">Study Rooms</h3>
                     <p class="category-description">Reserve quiet spaces for individual or group study sessions</p>
                     <div class="category-count">12 available</div>
                 </a>
 
-                <a href="#" class="category-card">
+                <a href="{{ url_for('resource.index', category=2) }}" class="category-card">
                     <div class="category-icon">📹</div>
                     <h3 class="category-name">AV Equipment</h3>
                     <p class="category-description">Borrow projectors, cameras, and audio-visual equipment</p>
                     <div class="category-count">8 available</div>
                 </a>
 
-                <a href="#" class="category-card">
+                <a href="{{ url_for('resource.index', category=3) }}" class="category-card">
                     <div class="category-icon">🔬</div>
                     <h3 class="category-name">Lab Instruments</h3>
                     <p class="category-description">Book specialized laboratory equipment and instruments</p>
                     <div class="category-count">15 available</div>
                 </a>
 
-                <a href="#" class="category-card">
+                <a href="{{ url_for('resource.index', category=4) }}" class="category-card">
                     <div class="category-icon">🎭</div>
                     <h3 class="category-name">Event Spaces</h3>
                     <p class="category-description">Book venues for events, meetings, and presentations</p>
                     <div class="category-count">6 available</div>
                 </a>
 
-                <a href="#" class="category-card">
+                <a href="{{ url_for('resource.index', category=7) }}" class="category-card">
                     <div class="category-icon">💻</div>
                     <h3 class="category-name">Computer Labs</h3>
                     <p class="category-description">Access computer labs with specialized software</p>

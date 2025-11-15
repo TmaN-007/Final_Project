@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ thread.subject or 'Conversation' }} - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Message Thread Page - iMessage Style */
+    .thread-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .thread-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    /* Back Link */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+        transform: translateX(-4px);
+    }
+
+    /* Thread Header */
+    .thread-header {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 20px;
+    }
+
+    .thread-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .thread-participants {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-tertiary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .resource-link {
+        color: rgba(153, 9, 221, 0.9);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .resource-link:hover {
+        color: rgba(134, 70, 238, 1);
+        text-decoration: underline;
+    }
+
+    /* Messages Container */
+    .messages-container {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        padding-bottom: 40px;
+        margin-bottom: 20px;
+        flex: 1;
+        overflow-y: auto;
+        max-height: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    /* Message Bubble */
+    .message-bubble {
+        display: flex;
+        margin-bottom: 12px;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .message-bubble.sent {
+        justify-content: flex-end;
+    }
+
+    .message-bubble.received {
+        justify-content: flex-start;
+    }
+
+    .message-bubble.system {
+        justify-content: center;
+    }
+
+    /* Message Content */
+    .message-content {
+        max-width: 70%;
+        position: relative;
+    }
+
+    .message-bubble.system .message-content {
+        max-width: 85%;
+    }
+
+    .message-sender {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.75rem;
+        color: var(--text-quaternary);
+        margin-bottom: 4px;
+        padding: 0 4px;
+    }
+
+    .message-bubble.sent .message-sender {
+        text-align: right;
+    }
+
+    .message-text {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        padding: 12px 16px;
+        border-radius: 18px;
+        word-wrap: break-word;
+        line-height: 1.5;
+    }
+
+    /* Sent messages (current user) - Blue bubbles */
+    .message-bubble.sent .message-text {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        color: #fff;
+        border-bottom-right-radius: 4px;
+    }
+
+    /* Received messages (other users) - Grey bubbles */
+    .message-bubble.received .message-text {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        color: var(--text-primary);
+        border-bottom-left-radius: 4px;
+    }
+
+    /* System messages (automated) - Center aligned with different style */
+    .message-bubble.system .message-text {
+        background: rgba(153, 9, 221, 0.1);
+        border: 1px solid rgba(153, 9, 221, 0.3);
+        color: var(--text-secondary);
+        text-align: center;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        padding: 10px 16px;
+    }
+
+    .message-time {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.7rem;
+        color: var(--text-quaternary);
+        margin-top: 4px;
+        padding: 0 4px;
+    }
+
+    .message-bubble.sent .message-time {
+        text-align: right;
+    }
+
+    .message-bubble.system .message-time {
+        text-align: center;
+    }
+
+    /* Message Input Area */
+    .message-input-container {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 20px;
+        position: sticky;
+        bottom: 20px;
+    }
+
+    .message-form {
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+    }
+
+    .message-input-wrapper {
+        flex: 1;
+        position: relative;
+    }
+
+    .message-input {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 20px;
+        padding: 12px 20px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        resize: none;
+        min-height: 44px;
+        max-height: 120px;
+        transition: all 0.3s ease;
+    }
+
+    .message-input:focus {
+        outline: none;
+        border-color: rgba(153, 9, 221, 0.6);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .message-input::placeholder {
+        color: var(--text-quinary);
+    }
+
+    .send-button {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+    }
+
+    .send-button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .send-button svg {
+        width: 20px;
+        height: 20px;
+        fill: #fff;
+    }
+
+    /* Empty State */
+    .empty-messages {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-quaternary);
+        font-family: 'Actor', sans-serif;
+    }
+
+    .empty-messages-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    .empty-messages-text {
+        font-size: 1.1rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .thread-container {
+            padding: 15px;
+        }
+
+        .messages-container {
+            max-height: 400px;
+            padding: 16px;
+        }
+
+        .message-content {
+            max-width: 85%;
+        }
+
+        .thread-title {
+            font-size: 1.3rem;
+        }
+
+        .message-text {
+            font-size: 0.9rem;
+            padding: 10px 14px;
+        }
+    }
+
+    /* Auto-scroll indicator */
+    .scroll-to-bottom {
+        position: absolute;
+        bottom: 80px;
+        right: 30px;
+        background: rgba(153, 9, 221, 0.8);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .scroll-to-bottom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .scroll-to-bottom.show {
+        display: flex;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="thread-page">
+    <div class="thread-container">
+        <!-- Back Link -->
+        <a href="{{ url_for('message.inbox') }}" class="back-link">← Back to Messages</a>
+
+        <!-- Thread Header -->
+        <div class="thread-header">
+            <h1 class="thread-title">{{ thread.subject or 'Conversation' }}</h1>
+            <div class="thread-participants">
+                <span>👥 With: {{ participants[0].full_name if participants else 'Unknown' }}</span>
+                {% if thread.resource_id %}
+                    <span>•</span>
+                    <span>📚 About:
+                        <a href="{{ url_for('resource.detail', resource_id=thread.resource_id) }}" class="resource-link">
+                            {{ thread._resource_title or 'Resource #' + thread.resource_id|string }}
+                        </a>
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Messages Container -->
+        <div class="messages-container" id="messagesContainer">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="message-bubble {% if message.sender_id == current_user.user_id %}sent{% elif message.sender_id == 0 %}system{% else %}received{% endif %}">
+                        <div class="message-content">
+                            {% if message.sender_id != current_user.user_id and message.sender_id != 0 %}
+                                <div class="message-sender">{{ message._sender_name or 'Unknown User' }}</div>
+                            {% endif %}
+
+                            <div class="message-text">
+                                {{ message.content }}
+                            </div>
+
+                            <div class="message-time">
+                                {% if message.sent_at.date() == now().date() %}
+                                    {{ message.sent_at.strftime('%I:%M %p') }}
+                                {% elif (now() - message.sent_at).days < 7 %}
+                                    {{ message.sent_at.strftime('%A %I:%M %p') }}
+                                {% else %}
+                                    {{ message.sent_at.strftime('%m/%d/%y %I:%M %p') }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-messages">
+                    <div class="empty-messages-icon">💬</div>
+                    <div class="empty-messages-text">No messages yet. Start the conversation!</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Scroll to Bottom Button -->
+        <button class="scroll-to-bottom" id="scrollToBottomBtn" onclick="scrollToBottom()">
+            ⬇️
+        </button>
+
+        <!-- Message Input Area -->
+        <div class="message-input-container">
+            <form method="POST" action="{{ url_for('message.send_message') }}" class="message-form" id="messageForm">
+                <input type="hidden" name="thread_id" value="{{ thread.thread_id }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="message-input-wrapper">
+                    <textarea
+                        name="content"
+                        id="messageInput"
+                        class="message-input"
+                        placeholder="Type a message..."
+                        required
+                        rows="1"
+                    ></textarea>
+                </div>
+
+                <button type="submit" class="send-button" id="sendButton">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-resize textarea as user types
+const messageInput = document.getElementById('messageInput');
+const sendButton = document.getElementById('sendButton');
+const messagesContainer = document.getElementById('messagesContainer');
+const scrollToBottomBtn = document.getElementById('scrollToBottomBtn');
+
+messageInput.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+
+    // Enable/disable send button based on content
+    sendButton.disabled = this.value.trim().length === 0;
+});
+
+// Handle Enter key (send on Enter, Shift+Enter for new line)
+messageInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (this.value.trim().length > 0) {
+            document.getElementById('messageForm').submit();
+        }
+    }
+});
+
+// Scroll to bottom on page load
+function scrollToBottom() {
+    // Get all message bubbles
+    const messages = messagesContainer.querySelectorAll('.message-bubble');
+
+    if (messages.length > 0) {
+        // Scroll the last message into view with smooth behavior
+        const lastMessage = messages[messages.length - 1];
+        lastMessage.scrollIntoView({ behavior: 'auto', block: 'end' });
+    } else {
+        // Fallback: scroll to the absolute bottom
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    scrollToBottomBtn.classList.remove('show');
+}
+
+// Auto-focus input and scroll to bottom on page load
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        scrollToBottom();
+        messageInput.focus();
+    }, 100);
+});
+
+// Also scroll immediately on DOMContentLoaded (faster than 'load')
+document.addEventListener('DOMContentLoaded', function() {
+    // Use setTimeout to ensure DOM is fully rendered
+    setTimeout(function() {
+        scrollToBottom();
+        messageInput.focus();
+    }, 500);
+});
+
+// Show scroll-to-bottom button when user scrolls up
+messagesContainer.addEventListener('scroll', function() {
+    const isScrolledToBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop <= messagesContainer.clientHeight + 100;
+    if (isScrolledToBottom) {
+        scrollToBottomBtn.classList.remove('show');
+    } else {
+        scrollToBottomBtn.classList.add('show');
+    }
+});
+
+// Auto-refresh messages every 10 seconds
+let lastMessageCount = {{ messages|length }};
+setInterval(function() {
+    fetch('{{ url_for("message.thread", thread_id=thread.thread_id) }}')
+        .then(response => response.text())
+        .then(html => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newMessages = doc.querySelectorAll('.message-bubble');
+
+            if (newMessages.length > lastMessageCount) {
+                // New messages arrived, reload the page
+                location.reload();
+            }
+        })
+        .catch(error => console.log('Failed to check for new messages'));
+}, 10000);
+
+// Initialize send button state
+sendButton.disabled = messageInput.value.trim().length === 0;
+</script>
+{% endblock %}

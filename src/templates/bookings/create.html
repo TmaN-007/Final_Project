@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+
+{% block title %}Book {{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Booking Creation Form Styles */
+    .booking-form-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-purple);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--accent-purple-2);
+        transform: translateX(-4px);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .form-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .form-subtitle {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-quaternary);
+    }
+
+    .resource-info-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 30px;
+    }
+
+    .resource-info-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .resource-info-details {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-tertiary);
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+
+    .form-control {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+        background: var(--input-focus-bg);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-quinary);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-help {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        color: var(--text-quinary);
+        margin-top: 4px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        justify-content: flex-end;
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .btn-cancel {
+        background: rgba(63, 11, 147, 0.4);
+        border: 1px solid rgba(153, 9, 221, 0.5);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(63, 11, 147, 0.6);
+        border-color: rgba(153, 9, 221, 0.8);
+        color: #fff;
+    }
+
+    .info-box {
+        background: rgba(153, 9, 221, 0.1);
+        border: 1px solid rgba(153, 9, 221, 0.3);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-tertiary);
+    }
+
+    .info-box-title {
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: var(--accent-purple);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="booking-form-page">
+    <div class="form-container">
+        <!-- Back Link -->
+        <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="back-link">
+            ← Back to Resource
+        </a>
+
+        <!-- Form Header -->
+        <div class="form-header">
+            <h1 class="form-title">Book Resource</h1>
+            <p class="form-subtitle">Select your preferred date and time</p>
+        </div>
+
+        <!-- Resource Info -->
+        <div class="resource-info-card">
+            <div class="resource-info-title">{{ resource.title }}</div>
+            <div class="resource-info-details">
+                <span>📍 {{ resource.location }}</span>
+                {% if resource.capacity %}
+                    <span>👥 Capacity: {{ resource.capacity }}</span>
+                {% endif %}
+                {% if resource.requires_approval %}
+                    <span>✅ Requires Approval</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info Box -->
+        {% if resource.requires_approval %}
+            <div class="info-box">
+                <div class="info-box-title">📋 Approval Required</div>
+                This resource requires approval from the owner. Your booking request will be pending until reviewed.
+            </div>
+        {% endif %}
+
+        <!-- Booking Form -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('booking.create', resource_id=resource.resource_id) }}">
+                {{ form.hidden_tag() }}
+                {{ form.resource_id }}
+
+                <!-- Start Date & Time -->
+                <div class="form-group">
+                    <label class="form-label required" for="start_datetime">Start Date & Time</label>
+                    {{ form.start_datetime(class="form-control", id="start_datetime") }}
+                    {% if form.start_datetime.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                            {{ form.start_datetime.errors[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="form-help">Select when you want to start using the resource</div>
+                </div>
+
+                <!-- End Date & Time -->
+                <div class="form-group">
+                    <label class="form-label required" for="end_datetime">End Date & Time</label>
+                    {{ form.end_datetime(class="form-control", id="end_datetime") }}
+                    {% if form.end_datetime.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                            {{ form.end_datetime.errors[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="form-help">Select when you will finish using the resource</div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label class="form-label" for="notes">Notes (Optional)</label>
+                    {{ form.notes(class="form-control", id="notes") }}
+                    {% if form.notes.errors %}
+                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 4px;">
+                            {{ form.notes.errors[0] }}
+                        </div>
+                    {% endif %}
+                    <div class="form-help">Add any special requests or additional information</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-submit">
+                        {% if resource.requires_approval %}
+                            Request Booking
+                        {% else %}
+                            Confirm Booking
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alternative: Waitlist Link -->
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="{{ url_for('booking.waitlist', resource_id=resource.resource_id) }}" style="color: var(--accent-purple); font-family: 'Actor', sans-serif;">
+                Time slot not available? Join the waitlist →
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

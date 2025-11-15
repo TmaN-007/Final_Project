@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+
+{% block title %}New Message - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* New Message Page Styles */
+    .new-message-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .new-message-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+        transform: translateX(-4px);
+    }
+
+    .new-message-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 32px;
+    }
+
+    .page-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        display: block;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+        width: 100%;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 150px;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+        outline: none;
+        border-color: rgba(153, 9, 221, 0.6);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .form-help {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-quaternary);
+        margin-top: 6px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+        margin-top: 32px;
+    }
+
+    .btn {
+        padding: 12px 28px;
+        border-radius: 8px;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+    }
+
+    .btn-secondary {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        color: var(--text-secondary);
+    }
+
+    .btn-secondary:hover {
+        background: var(--card-bg);
+        color: var(--text-primary);
+    }
+
+    /* Resource Preview */
+    .resource-preview {
+        background: rgba(153, 9, 221, 0.05);
+        border: 1px solid rgba(153, 9, 221, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .resource-preview-icon {
+        font-size: 2rem;
+    }
+
+    .resource-preview-content {
+        flex: 1;
+    }
+
+    .resource-preview-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .resource-preview-category {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-tertiary);
+    }
+
+    .recipient-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        background: rgba(153, 9, 221, 0.05);
+        border: 1px solid rgba(153, 9, 221, 0.2);
+        border-radius: 8px;
+        margin-top: 8px;
+    }
+
+    .recipient-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.3), rgba(134, 70, 238, 0.3));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Actor', sans-serif;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .recipient-details {
+        flex: 1;
+    }
+
+    .recipient-name {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .recipient-role {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.85rem;
+        color: var(--text-tertiary);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .new-message-container {
+            padding: 20px 15px;
+        }
+
+        .new-message-card {
+            padding: 24px;
+        }
+
+        .page-title {
+            font-size: 1.6rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="new-message-page">
+    <div class="new-message-container">
+        <a href="{{ url_for('message.inbox') }}" class="back-link">← Back to Messages</a>
+
+        <div class="new-message-card">
+            <h1 class="page-title">New Message</h1>
+
+            <!-- Resource Preview (if messaging about a resource) -->
+            {% if resource %}
+                <div class="resource-preview">
+                    <div class="resource-preview-icon">📚</div>
+                    <div class="resource-preview-content">
+                        <div class="resource-preview-title">{{ resource.title }}</div>
+                        <div class="resource-preview-category">{{ resource.category_name }}</div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('message.new_thread') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% if recipient_id %}
+                    <input type="hidden" name="recipient_id" value="{{ recipient_id }}">
+                {% endif %}
+                {% if resource_id %}
+                    <input type="hidden" name="resource_id" value="{{ resource_id }}">
+                {% endif %}
+
+                <!-- Recipient -->
+                <div class="form-group">
+                    <label class="form-label required">To</label>
+                    {% if recipient %}
+                        <div class="recipient-info">
+                            <div class="recipient-avatar">{{ recipient.name[0]|upper }}</div>
+                            <div class="recipient-details">
+                                <div class="recipient-name">{{ recipient.name }}</div>
+                                <div class="recipient-role">{{ recipient.role|title }}</div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <select name="recipient_id" id="recipientSelect" class="form-select" required>
+                            <option value="">Select a recipient...</option>
+                            {% for user in users %}
+                                <option value="{{ user.user_id }}">{{ user.name }} ({{ user.role|title }})</option>
+                            {% endfor %}
+                        </select>
+                        <p class="form-help">Select who you want to message</p>
+                    {% endif %}
+                </div>
+
+                <!-- Subject -->
+                <div class="form-group">
+                    <label for="subject" class="form-label">Subject</label>
+                    <input
+                        type="text"
+                        id="subject"
+                        name="subject"
+                        class="form-input"
+                        placeholder="{% if resource %}Inquiry about {{ resource.title }}{% else %}Enter a subject...{% endif %}"
+                        value="{% if resource %}Inquiry about {{ resource.title }}{% endif %}"
+                        maxlength="200"
+                    >
+                    <p class="form-help">Optional - helps organize your conversations</p>
+                </div>
+
+                <!-- Message Content -->
+                <div class="form-group">
+                    <label for="content" class="form-label required">Message</label>
+                    <textarea
+                        id="content"
+                        name="content"
+                        class="form-textarea"
+                        placeholder="Type your message here..."
+                        required
+                        maxlength="5000"
+                    ></textarea>
+                    <p class="form-help">Maximum 5000 characters</p>
+                </div>
+
+                <!-- Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('message.inbox') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Character counter for message content
+const contentTextarea = document.getElementById('content');
+if (contentTextarea) {
+    contentTextarea.addEventListener('input', function() {
+        const remaining = 5000 - this.value.length;
+        const helpText = this.parentElement.querySelector('.form-help');
+        helpText.textContent = `${remaining} characters remaining`;
+
+        if (remaining < 100) {
+            helpText.style.color = '#ef4444';
+        } else {
+            helpText.style.color = '';
+        }
+    });
+}
+</script>
+{% endblock %}

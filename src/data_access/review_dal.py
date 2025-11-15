@@ -223,6 +223,29 @@ class ReviewDAL(BaseDAL):
         return cls.execute_query(query, (user_id, limit, offset))
 
     @classmethod
+    def has_user_reviewed_booking(cls, booking_id: int, user_id: int) -> bool:
+        """
+        Check if a user has already reviewed a specific booking.
+
+        Args:
+            booking_id (int): Booking ID
+            user_id (int): User ID
+
+        Returns:
+            bool: True if user has reviewed this booking, False otherwise
+
+        Example:
+            >>> has_reviewed = ReviewDAL.has_user_reviewed_booking(123, 456)
+        """
+        query = """
+            SELECT COUNT(*) as count
+            FROM reviews
+            WHERE booking_id = ? AND reviewer_id = ?
+        """
+        result = cls.execute_query(query, (booking_id, user_id))
+        return result[0]['count'] > 0 if result else False
+
+    @classmethod
     def update_review(
         cls,
         review_id: int,
@@ -412,11 +435,11 @@ class ReviewDAL(BaseDAL):
             SELECT
                 AVG(rating) as avg_rating,
                 COUNT(*) as total_reviews,
-                SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_star,
-                SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_star,
-                SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_star,
-                SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_star,
-                SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star
+                SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as rating_5,
+                SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as rating_4,
+                SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as rating_3,
+                SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as rating_2,
+                SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as rating_1
             FROM reviews
             WHERE resource_id = ?
               AND is_visible = 1
@@ -425,12 +448,206 @@ class ReviewDAL(BaseDAL):
         return results[0] if results else {
             'avg_rating': None,
             'total_reviews': 0,
-            'five_star': 0,
-            'four_star': 0,
-            'three_star': 0,
-            'two_star': 0,
-            'one_star': 0
+            'rating_5': 0,
+            'rating_4': 0,
+            'rating_3': 0,
+            'rating_2': 0,
+            'rating_1': 0
         }
+
+    # =============================================================================
+    # ADMIN PANEL METHODS
+    # =============================================================================
+
+    @classmethod
+    def count_all_reviews(cls) -> int:
+        """
+        Count total number of reviews.
+
+        Returns:
+            Total count of reviews
+        """
+        query = "SELECT COUNT(*) as count FROM reviews"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def count_pending_reviews(cls) -> int:
+        """
+        Count reviews that are not visible (pending moderation).
+
+        Returns:
+            Count of pending reviews
+        """
+        query = "SELECT COUNT(*) as count FROM reviews WHERE is_visible = 0"
+        result = cls.execute_query(query)
+        return result[0]['count'] if result else 0
+
+    @classmethod
+    def get_all_reviews_paginated(cls, page: int = 1, per_page: int = 20,
+                                   visibility_filter: str = '',
+                                   resource_id: int = None) -> Dict[str, Any]:
+        """
+        Get paginated list of reviews with optional filters (admin only).
+
+        Args:
+            page: Page number (1-indexed)
+            per_page: Number of items per page
+            visibility_filter: Filter by visibility ('visible', 'hidden')
+            resource_id: Filter by resource ID
+
+        Returns:
+            Dict with 'reviews' list and 'pagination' info
+        """
+        offset = (page - 1) * per_page
+
+        # Build WHERE clause dynamically
+        where_clauses = []
+        params = []
+
+        if visibility_filter == 'visible':
+            where_clauses.append("r.is_visible = 1")
+        elif visibility_filter == 'hidden':
+            where_clauses.append("r.is_visible = 0")
+
+        if resource_id:
+            where_clauses.append("r.resource_id = ?")
+            params.append(resource_id)
+
+        where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+
+        # Get total count
+        count_query = f"SELECT COUNT(*) as count FROM reviews r WHERE {where_sql}"
+        total_result = cls.execute_query(count_query, tuple(params))
+        total_count = total_result[0]['count'] if total_result else 0
+
+        # Get reviews
+        query = f"""
+            SELECT r.review_id, r.rating, r.comment, r.is_visible,
+                   r.created_at, r.updated_at, r.reviewer_id, r.booking_id, r.resource_id,
+                   u.name as user_name, u.email as user_email,
+                   res.title as resource_title
+            FROM reviews r
+            LEFT JOIN users u ON r.reviewer_id = u.user_id
+            LEFT JOIN resources res ON r.resource_id = res.resource_id
+            WHERE {where_sql}
+            ORDER BY r.created_at DESC
+            LIMIT ? OFFSET ?
+        """
+        params.extend([per_page, offset])
+        reviews = cls.execute_query(query, tuple(params))
+
+        # Calculate pagination info
+        total_pages = (total_count + per_page - 1) // per_page
+
+        return {
+            'reviews': reviews,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total_count': total_count,
+                'total_pages': total_pages,
+                'has_prev': page > 1,
+                'has_next': page < total_pages
+            }
+        }
+
+    @classmethod
+    def approve_review(cls, review_id: int) -> bool:
+        """
+        Approve a review (make it visible) - admin only.
+
+        Args:
+            review_id: Review ID
+
+        Returns:
+            True if approval successful, False otherwise
+        """
+        query = """
+            UPDATE reviews
+            SET is_visible = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE review_id = ?
+        """
+        rows_affected = cls.execute_update(query, (review_id,))
+        return rows_affected > 0
+
+    @classmethod
+    def hide_review(cls, review_id: int) -> bool:
+        """
+        Hide a review (make it not visible) - admin only.
+
+        Args:
+            review_id: Review ID
+
+        Returns:
+            True if hiding successful, False otherwise
+        """
+        query = """
+            UPDATE reviews
+            SET is_visible = 0, updated_at = CURRENT_TIMESTAMP
+            WHERE review_id = ?
+        """
+        rows_affected = cls.execute_update(query, (review_id,))
+        return rows_affected > 0
+
+    @classmethod
+    def delete_review_admin(cls, review_id: int) -> bool:
+        """
+        Delete a review permanently - admin only.
+
+        Args:
+            review_id: Review ID
+
+        Returns:
+            True if deletion successful, False otherwise
+        """
+        query = "DELETE FROM reviews WHERE review_id = ?"
+        rows_affected = cls.execute_update(query, (review_id,))
+        return rows_affected > 0
+
+    @classmethod
+    def hide_reviews_by_resource(cls, resource_id: int) -> int:
+        """
+        Hide all visible reviews for a specific resource.
+        Used when a resource is archived.
+
+        Args:
+            resource_id: Resource ID whose reviews should be hidden
+
+        Returns:
+            int: Number of reviews hidden
+        """
+        query = """
+            UPDATE reviews
+            SET is_visible = 0,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE resource_id = ?
+              AND is_visible = 1
+        """
+        rows_affected = cls.execute_update(query, (resource_id,))
+        return rows_affected
+
+    @classmethod
+    def show_reviews_by_resource(cls, resource_id: int) -> int:
+        """
+        Show all hidden reviews for a specific resource.
+        Used when a resource is unarchived/published.
+
+        Args:
+            resource_id: Resource ID whose reviews should be shown
+
+        Returns:
+            int: Number of reviews shown
+        """
+        query = """
+            UPDATE reviews
+            SET is_visible = 1,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE resource_id = ?
+              AND is_visible = 0
+        """
+        rows_affected = cls.execute_update(query, (resource_id,))
+        return rows_affected
 
 
 class ContentModerationDAL(BaseDAL):

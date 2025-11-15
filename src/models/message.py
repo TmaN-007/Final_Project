@@ -40,6 +40,10 @@ class MessageThread:
         self._last_message_at = thread_data.get('last_message_at')
         self._unread_count = thread_data.get('unread_count', 0)
         self._participant_names = thread_data.get('participant_names', [])
+        self._other_participant_name = thread_data.get('other_participant_name')
+        self._other_participant_id = thread_data.get('other_participant_id')
+        self._last_message_content = thread_data.get('last_message_content')
+        self._last_message_sender_id = thread_data.get('last_message_sender_id')
 
     # Property getters and setters
     @property
@@ -143,6 +147,46 @@ class MessageThread:
     def participant_names(self, value: List[str]):
         """Set participant names."""
         self._participant_names = value if value else []
+
+    @property
+    def other_participant_name(self) -> Optional[str]:
+        """Get other participant name."""
+        return self._other_participant_name
+
+    @other_participant_name.setter
+    def other_participant_name(self, value: Optional[str]):
+        """Set other participant name."""
+        self._other_participant_name = value
+
+    @property
+    def other_participant_id(self) -> Optional[int]:
+        """Get other participant ID."""
+        return self._other_participant_id
+
+    @other_participant_id.setter
+    def other_participant_id(self, value: Optional[int]):
+        """Set other participant ID."""
+        self._other_participant_id = value
+
+    @property
+    def last_message_content(self) -> Optional[str]:
+        """Get last message content."""
+        return self._last_message_content
+
+    @last_message_content.setter
+    def last_message_content(self, value: Optional[str]):
+        """Set last message content."""
+        self._last_message_content = value
+
+    @property
+    def last_message_sender_id(self) -> Optional[int]:
+        """Get last message sender ID."""
+        return self._last_message_sender_id
+
+    @last_message_sender_id.setter
+    def last_message_sender_id(self, value: Optional[int]):
+        """Set last message sender ID."""
+        self._last_message_sender_id = value
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -287,7 +331,20 @@ class Message:
 
     @property
     def sent_at(self):
-        """Get sent timestamp."""
+        """Get sent timestamp as datetime object."""
+        if not self._sent_at:
+            return None
+
+        # Convert string to datetime if needed
+        if isinstance(self._sent_at, str):
+            try:
+                return datetime.strptime(self._sent_at, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                # Try alternative format
+                try:
+                    return datetime.fromisoformat(self._sent_at.replace('Z', '+00:00'))
+                except:
+                    return None
         return self._sent_at
 
     @sent_at.setter

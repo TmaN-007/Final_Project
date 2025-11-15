@@ -397,5 +397,124 @@ What's NOT working:
 
 ---
 
-**Last Updated:** 2025-11-08
-**Next Milestone:** Complete BookingDAL and BookingController
+---
+
+## 🐛 BOOKING SYSTEM BUG FIXES (2025-11-14)
+
+### Critical Fixes Applied
+
+#### 1. Datetime Format Parsing Error ✅
+**Issue:** Users unable to access bookings page due to `ValueError: time data '2025-11-17T13:00:00' does not match format '%Y-%m-%d %H:%M:%S'`
+
+**Root Cause:** The `_parse_datetime()` method in Booking model only supported SQLite format, not ISO format with 'T' separator.
+
+**Fix Applied:** Updated [src/models/booking.py:58-67](src/models/booking.py#L58-L67) and [src/models/booking.py:398-407](src/models/booking.py#L398-L407)
+- Added dual-format datetime parsing
+- Tries ISO format with `fromisoformat()` first
+- Falls back to SQLite format with `strptime()`
+- Applied to both Booking and Waitlist classes
+
+**Files Modified:**
+- `src/models/booking.py` (lines 58-67, 398-407)
+
+---
+
+#### 2. Timezone Conversion Bug (CRITICAL) ✅
+**Issue:** Clicking 6-8 AM time slot booked users for 12-1 PM instead (6-hour offset). Clicking 9-10 AM booked for 2-3 PM.
+
+**Root Cause:** JavaScript `toISOString()` method converts local time to UTC, causing timezone offset issues when submitting booking forms.
+
+**Fix Applied:** Updated [src/templates/resources/detail.html:989-996](src/templates/resources/detail.html#L989-L996)
+- Created `formatLocalDatetime()` helper function to preserve local timezone
+- Formats dates as `YYYY-MM-DDTHH:MM` without UTC conversion
+- Updated `showBookingForm()` to use local datetime formatting (lines 1015-1016)
+
+**Files Modified:**
+- `src/templates/resources/detail.html` (lines 989-996, 1015-1016)
+
+**Impact:** Bookings now correctly reflect user-selected local time slots without timezone conversion errors.
+
+---
+
+#### 3. Cancelled Bookings Still Showing as Booked ✅
+**Issue:** After cancelling a booking, the time slot remained marked as "booked" (red) on the calendar, preventing future bookings.
+
+**Root Cause:** The `/bookings/calendar-data/<resource_id>` endpoint returned ALL bookings regardless of status, including cancelled and rejected ones.
+
+**Fix Applied:** Updated [src/controllers/booking_controller.py:567-569](src/controllers/booking_controller.py#L567-L569)
+- Added status filter to skip cancelled and rejected bookings
+- Only active bookings (pending, approved, completed) now block calendar slots
+
+**Files Modified:**
+- `src/controllers/booking_controller.py` (lines 567-569)
+
+**Impact:** Cancelled bookings no longer block time slots, allowing users to rebook previously cancelled times.
+
+---
+
+#### 4. Past Time Slots Showing as Booked (Red) Instead of Unavailable (Grey) ✅
+**Issue:** Time slots in past days showed as red (booked) when they should show as grey (unavailable), confusing users about actual booking status.
+
+**Root Cause:** Slot color priority logic in `createSlotButton()` checked booking status before time status, causing past slots with bookings to display as red.
+
+**Fix Applied:** Updated [src/templates/resources/detail.html:1090-1104](src/templates/resources/detail.html#L1090-L1104)
+- Restructured slot color priority to check `isPast` first
+- Past slots always show grey (unavailable) regardless of booking status
+- Only future/current booked slots show as red
+
+**Files Modified:**
+- `src/templates/resources/detail.html` (lines 1090-1104)
+
+**Impact:** Calendar now correctly distinguishes between:
+- Grey (unavailable): Past time slots or beyond max booking window
+- Red (booked): Future/current slots with active bookings
+- Green (available): Future/current slots ready for booking
+- Amber (beyond-max): Future slots beyond maximum booking window
+
+---
+
+#### 5. UnboundLocalError in Booking Submission ✅
+**Issue:** Booking submission crashed with `UnboundLocalError: local variable 'datetime' referenced before assignment`
+
+**Root Cause:** Duplicate `from datetime import datetime` import on line 202 inside the `detail()` function caused scoping issues.
+
+**Fix Applied:** Removed duplicate import from [src/controllers/resource_controller.py:202](src/controllers/resource_controller.py#L202)
+
+**Files Modified:**
+- `src/controllers/resource_controller.py` (line 202 removed)
+
+---
+
+### Debugging Enhancements Added
+
+Added console logging for booking conflict detection in [src/templates/resources/detail.html](src/templates/resources/detail.html):
+- Line 916: Logs all fetched bookings from API
+- Lines 669-675: Logs detailed overlap detection with timestamps
+
+These logs help diagnose future booking availability issues.
+
+---
+
+### Testing Recommendations
+
+**Timezone Handling:**
+1. Select time slots in different timezones
+2. Verify booking times match selected local time
+3. Check database stores correct datetime values
+
+**Calendar Display:**
+1. Create booking, verify slot shows red
+2. Cancel booking, verify slot shows green again
+3. Check past dates show grey (not red)
+4. Navigate multiple weeks forward/backward
+
+**Booking Conflicts:**
+1. Try booking overlapping time slots (should fail)
+2. Try booking adjacent time slots (should succeed)
+3. Verify conflict detection works across multiple days
+
+---
+
+**Last Updated:** 2025-11-14
+**Status:** Booking system bugs resolved - Core functionality stable
+**Next Milestone:** Comprehensive testing and additional feature polish

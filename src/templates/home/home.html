@@ -122,9 +122,27 @@
             <!-- Center: Navigation Links -->
             <div class="navbar-center">
                 <a href="{{ url_for('main.index') }}" class="nav-link active">Home</a>
-                <a href="{{ url_for('main.search') }}" class="nav-link">Browse Resources</a>
-                <a href="#" class="nav-link">My Bookings</a>
-                <a href="#" class="nav-link">Messages</a>
+                <a href="{{ url_for('resource.index') }}" class="nav-link">Browse Resources</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('booking.index') }}" class="nav-link">My Bookings</a>
+                    <a href="{{ url_for('message.inbox') }}" class="nav-link" style="position: relative;">
+                        Messages
+                        {% if unread_messages > 0 %}
+                            <span class="notification-badge">{{ unread_messages if unread_messages < 100 else '99+' }}</span>
+                        {% endif %}
+                    </a>
+                    {% if current_user.role in ['staff', 'admin'] %}
+                        <a href="{{ url_for('booking.pending_approvals') }}" class="nav-link" style="position: relative;">
+                            Approvals
+                            {% if pending_approvals > 0 %}
+                                <span class="notification-badge">{{ pending_approvals if pending_approvals < 100 else '99+' }}</span>
+                            {% endif %}
+                        </a>
+                    {% endif %}
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin.dashboard') }}" class="nav-link">Admin Panel</a>
+                    {% endif %}
+                {% endif %}
             </div>
 
             <!-- Right: Theme Toggle and Account -->
@@ -225,7 +243,7 @@
 
                 <!-- Search Bar -->
                 <div class="search-container">
-                    <form action="{{ url_for('main.search') }}" method="GET" class="search-form">
+                    <form action="{{ url_for('resource.index') }}" method="GET" class="search-form">
                         <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <circle cx="11" cy="11" r="8"/>
                             <path d="m21 21-4.35-4.35"/>
@@ -246,20 +264,30 @@
         <!-- Quick Filters -->
         <section class="filters-section">
             <div class="filters-container">
-                <button class="filter-chip active">All Resources</button>
-                <button class="filter-chip">Available Now</button>
-                <button class="filter-chip">Study Spaces</button>
-                <button class="filter-chip">Equipment</button>
-                <button class="filter-chip">Event Spaces</button>
-                <button class="filter-chip">Near Me</button>
+                <a href="{{ url_for('resource.index') }}" class="filter-chip">All Resources</a>
+                <a href="#" class="filter-chip" id="available-now-chip">Available Now</a>
+                <a href="{{ url_for('resource.index', category=1) }}" class="filter-chip">Study Spaces</a>
+                <a href="{{ url_for('resource.index', category=2) }}" class="filter-chip">Equipment</a>
+                <a href="{{ url_for('resource.index', category=4) }}" class="filter-chip">Event Spaces</a>
             </div>
         </section>
+
+        <script>
+        // Handle "Available Now" click with current date/time
+        document.getElementById('available-now-chip').addEventListener('click', function(e) {
+            e.preventDefault();
+            const now = new Date();
+            const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
+            const time = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+            window.location.href = "{{ url_for('resource.index') }}" + "?availability_date=" + date + "&availability_time=" + time;
+        });
+        </script>
 
         <!-- Resource Categories -->
         <section class="categories-section">
             <h2 class="section-title">Browse by Category</h2>
             <div class="categories-carousel">
-                <a href="{{ url_for('main.search', category='study-rooms') }}" class="category-box" data-category="study-rooms">
+                <a href="{{ url_for('resource.index', category=1) }}" class="category-box" data-category="study-rooms">
                     <div class="category-content">
                         <div class="category-icon">
                             <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Light.png') }}" alt="Study Rooms" class="icon-light">
@@ -268,12 +296,12 @@
                         <h3 class="category-name">Study Rooms</h3>
                         <div class="category-details">
                             <p class="category-description">Reserve quiet spaces for individual or group study sessions</p>
-                            <div class="category-count">12 available</div>
+                            <div class="category-count">{{ category_availability.get(1, 0) }} available</div>
                         </div>
                     </div>
                 </a>
 
-                <a href="{{ url_for('main.search', category='av-equipment') }}" class="category-box" data-category="av-equipment">
+                <a href="{{ url_for('resource.index', category=2) }}" class="category-box" data-category="av-equipment">
                     <div class="category-content">
                         <div class="category-icon">
                             <img src="{{ url_for('static', filename='images/icons/AV_Equip_Light.png') }}" alt="AV Equipment" class="icon-light">
@@ -282,12 +310,12 @@
                         <h3 class="category-name">AV Equipment</h3>
                         <div class="category-details">
                             <p class="category-description">Borrow projectors, cameras, and audio-visual equipment</p>
-                            <div class="category-count">8 available</div>
+                            <div class="category-count">{{ category_availability.get(2, 0) }} available</div>
                         </div>
                     </div>
                 </a>
 
-                <a href="{{ url_for('main.search', category='lab-instruments') }}" class="category-box" data-category="lab-instruments">
+                <a href="{{ url_for('resource.index', category=3) }}" class="category-box" data-category="lab-instruments">
                     <div class="category-content">
                         <div class="category-icon">
                             <img src="{{ url_for('static', filename='images/icons/Lab_Light.png') }}" alt="Lab Instruments" class="icon-light">
@@ -296,12 +324,12 @@
                         <h3 class="category-name">Lab Instruments</h3>
                         <div class="category-details">
                             <p class="category-description">Book specialized laboratory equipment and instruments</p>
-                            <div class="category-count">15 available</div>
+                            <div class="category-count">{{ category_availability.get(3, 0) }} available</div>
                         </div>
                     </div>
                 </a>
 
-                <a href="{{ url_for('main.search', category='event-spaces') }}" class="category-box" data-category="event-spaces">
+                <a href="{{ url_for('resource.index', category=4) }}" class="category-box" data-category="event-spaces">
                     <div class="category-content">
                         <div class="category-icon">
                             <img src="{{ url_for('static', filename='images/icons/Event_Light.png') }}" alt="Event Spaces" class="icon-light">
@@ -310,12 +338,12 @@
                         <h3 class="category-name">Event Spaces</h3>
                         <div class="category-details">
                             <p class="category-description">Book venues for events, meetings, and presentations</p>
-                            <div class="category-count">6 available</div>
+                            <div class="category-count">{{ category_availability.get(4, 0) }} available</div>
                         </div>
                     </div>
                 </a>
 
-                <a href="{{ url_for('main.search', category='computer-labs') }}" class="category-box" data-category="computer-labs">
+                <a href="{{ url_for('resource.index', category=7) }}" class="category-box" data-category="computer-labs">
                     <div class="category-content">
                         <div class="category-icon">
                             <img src="{{ url_for('static', filename='images/icons/Computer_light.png') }}" alt="Computer Labs" class="icon-light">
@@ -324,7 +352,7 @@
                         <h3 class="category-name">Computer Labs</h3>
                         <div class="category-details">
                             <p class="category-description">Access computer labs with specialized software</p>
-                            <div class="category-count">4 available</div>
+                            <div class="category-count">{{ category_availability.get(7, 0) }} available</div>
                         </div>
                     </div>
                 </a>
@@ -335,85 +363,45 @@
         <section class="featured-section">
             <h2 class="section-title">Featured Resources</h2>
             <div class="resources-grid">
-                <div class="resource-card">
-                    <div class="resource-image" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.1), rgba(134, 70, 238, 0.1));">
-                        <div class="resource-badge available">Available</div>
-                    </div>
-                    <div class="resource-info">
-                        <h3 class="resource-title">Study Room 301</h3>
-                        <p class="resource-category">
-                            <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Light.png') }}" alt="" class="icon-light category-inline-icon">
-                            <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
-                            Study Rooms
-                        </p>
-                        <p class="resource-description">Quiet space for 6-8 people with whiteboard and projector</p>
-                        <div class="resource-meta">
-                            <span class="resource-location">📍 Wells Library</span>
-                            <span class="resource-capacity">👥 8 people</span>
-                        </div>
-                        <button class="resource-book-btn">Book Now</button>
-                    </div>
-                </div>
-
-                <div class="resource-card">
-                    <div class="resource-image" style="background: linear-gradient(135deg, rgba(134, 70, 238, 0.1), rgba(63, 11, 147, 0.1));">
-                        <div class="resource-badge available">Available</div>
-                    </div>
-                    <div class="resource-info">
-                        <h3 class="resource-title">4K Video Camera</h3>
-                        <p class="resource-category">
-                            <img src="{{ url_for('static', filename='images/icons/AV_Equip_Light.png') }}" alt="" class="icon-light category-inline-icon">
-                            <img src="{{ url_for('static', filename='images/icons/AV_Equip_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
-                            AV Equipment
-                        </p>
-                        <p class="resource-description">Professional Sony camera with full accessory kit</p>
-                        <div class="resource-meta">
-                            <span class="resource-location">📍 Media Lab</span>
-                            <span class="resource-rating">⭐ 4.8 (24 reviews)</span>
-                        </div>
-                        <button class="resource-book-btn">Book Now</button>
-                    </div>
-                </div>
-
-                <div class="resource-card">
-                    <div class="resource-image" style="background: linear-gradient(135deg, rgba(63, 11, 147, 0.1), rgba(153, 9, 221, 0.1));">
-                        <div class="resource-badge booked">Booked</div>
-                    </div>
-                    <div class="resource-info">
-                        <h3 class="resource-title">Conference Room A</h3>
-                        <p class="resource-category">
-                            <img src="{{ url_for('static', filename='images/icons/Event_Light.png') }}" alt="" class="icon-light category-inline-icon">
-                            <img src="{{ url_for('static', filename='images/icons/Event_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
-                            Event Spaces
-                        </p>
-                        <p class="resource-description">Large meeting room with AV setup for 30 people</p>
-                        <div class="resource-meta">
-                            <span class="resource-location">📍 Kelley School</span>
-                            <span class="resource-capacity">👥 30 people</span>
-                        </div>
-                        <button class="resource-book-btn" disabled>Unavailable</button>
-                    </div>
-                </div>
-
-                <div class="resource-card">
-                    <div class="resource-image" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.1), rgba(134, 70, 238, 0.1));">
-                        <div class="resource-badge available">Available</div>
-                    </div>
-                    <div class="resource-info">
-                        <h3 class="resource-title">3D Printer Lab</h3>
-                        <p class="resource-category">
-                            <img src="{{ url_for('static', filename='images/icons/Lab_Light.png') }}" alt="" class="icon-light category-inline-icon">
-                            <img src="{{ url_for('static', filename='images/icons/Lab_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
-                            Lab Instruments
-                        </p>
-                        <p class="resource-description">Multiple 3D printers and design software access</p>
-                        <div class="resource-meta">
-                            <span class="resource-location">📍 Luddy Hall</span>
-                            <span class="resource-rating">⭐ 4.9 (15 reviews)</span>
-                        </div>
-                        <button class="resource-book-btn">Book Now</button>
-                    </div>
-                </div>
+                {% if featured_resources %}
+                    {% for resource in featured_resources %}
+                        {% set icon_map = {
+                            'Study Rooms': 'Study_Room_Icon',
+                            'AV Equipment': 'AV_Equip',
+                            'Lab Instruments': 'Lab',
+                            'Event Spaces': 'Event',
+                            'Computer Labs': 'Computer'
+                        } %}
+                        {% set icon_name = icon_map.get(resource.category_name, 'Study_Room_Icon') %}
+                        <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="resource-card">
+                            <div class="resource-image" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.1), rgba(134, 70, 238, 0.1));">
+                                {% if resource.primary_image %}
+                                    <img src="{{ url_for('static', filename='uploads/' + resource.primary_image) }}" alt="{{ resource.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% endif %}
+                            </div>
+                            <div class="resource-info">
+                                <h3 class="resource-title">{{ resource.title }}</h3>
+                                <p class="resource-category">
+                                    <img src="{{ url_for('static', filename='images/icons/' + icon_name + '_Light.png') }}" alt="" class="icon-light category-inline-icon">
+                                    <img src="{{ url_for('static', filename='images/icons/' + icon_name + '_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
+                                    {{ resource.category_name }}
+                                </p>
+                                <p class="resource-description">{{ resource.description[:80] }}{% if resource.description|length > 80 %}...{% endif %}</p>
+                                <div class="resource-meta">
+                                    <span class="resource-location">📍 {{ resource.location }}</span>
+                                    {% if resource.avg_rating and resource.review_count > 0 %}
+                                        <span class="resource-rating">⭐ {{ "%.1f"|format(resource.avg_rating) }} ({{ resource.review_count }} reviews)</span>
+                                    {% elif resource.capacity %}
+                                        <span class="resource-capacity">👥 {{ resource.capacity }} people</span>
+                                    {% endif %}
+                                </div>
+                                <button class="resource-book-btn">Book Now</button>
+                            </div>
+                        </a>
+                    {% endfor %}
+                {% else %}
+                    <p>No featured resources available at the moment.</p>
+                {% endif %}
             </div>
         </section>
     </main>

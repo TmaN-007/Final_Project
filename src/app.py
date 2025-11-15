@@ -19,6 +19,7 @@ Factory Pattern Benefits:
 
 import os
 import logging
+from datetime import datetime
 from flask import Flask, render_template, jsonify
 from flask_wtf.csrf import CSRFProtect
 from flask_login import LoginManager
@@ -118,9 +119,6 @@ def init_extensions(app):
             return User(user_data)
         return None
 
-    # TODO: Initialize Flask-Mail when email notifications are implemented
-    # mail.init_app(app)
-
 
 def register_blueprints(app):
     """
@@ -141,12 +139,25 @@ def register_blueprints(app):
     from src.controllers.auth_controller import auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
 
-    # TODO: Register other blueprints as they are implemented
-    # from src.controllers.resource_controller import resource_bp
-    # app.register_blueprint(resource_bp, url_prefix='/resources')
+    # Resource blueprint
+    from src.controllers.resource_controller import resource_bp
+    app.register_blueprint(resource_bp, url_prefix='/resources')
 
-    # from src.controllers.booking_controller import booking_bp
-    # app.register_blueprint(booking_bp, url_prefix='/bookings')
+    # Booking blueprint
+    from src.controllers.booking_controller import booking_bp
+    app.register_blueprint(booking_bp, url_prefix='/bookings')
+
+    # Message blueprint
+    from src.controllers.message_controller import message_bp
+    app.register_blueprint(message_bp, url_prefix='/messages')
+
+    # Review blueprint
+    from src.controllers.review_controller import review_bp
+    app.register_blueprint(review_bp, url_prefix='/reviews')
+
+    # Admin blueprint
+    from src.controllers.admin_controller import admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
 
 def register_error_handlers(app):
@@ -223,11 +234,85 @@ def register_template_context(app):
     @app.context_processor
     def utility_processor():
         """Make utility functions available in templates."""
+        from flask_login import current_user
+
+        # Get unread message count for authenticated users
+        unread_messages = 0
+        pending_approvals = 0
+
+        if current_user.is_authenticated:
+            try:
+                from src.data_access.message_dal import MessageDAL
+                unread_messages = MessageDAL.get_unread_message_count(current_user.user_id)
+            except Exception:
+                # Fail silently if there's an error getting unread count
+                unread_messages = 0
+
+            # Get pending approval count for staff/admin users
+            if current_user.role in ['staff', 'admin']:
+                try:
+                    from src.data_access.booking_dal import BookingDAL
+                    # Get bookings pending approval for resources owned by current user
+                    pending_bookings = BookingDAL.get_pending_approvals(
+                        resource_owner_id=current_user.user_id,
+                        owner_type='user',
+                        limit=1000,  # High limit to get all pending
+                        offset=0
+                    )
+                    pending_approvals = len(pending_bookings)
+                except Exception:
+                    # Fail silently if there's an error getting pending count
+                    pending_approvals = 0
+
         return {
             'app_name': 'Campus Resource Hub',
             'app_version': '1.0.0',
-            'current_year': 2025
+            'current_year': 2025,
+            'now': datetime.now,
+            'unread_messages': unread_messages,
+            'pending_approvals': pending_approvals
         }
+
+    @app.template_filter('localtime')
+    def localtime_filter(utc_time_str, format_str='%Y-%m-%d %H:%M:%S'):
+        """
+        Convert UTC time string to local time for display.
+
+        Args:
+            utc_time_str: UTC datetime string from database
+            format_str: Output format string
+
+        Returns:
+            Formatted local time string
+        """
+        if not utc_time_str:
+            return ''
+
+        try:
+            from datetime import datetime
+
+            # Parse the UTC time string
+            if isinstance(utc_time_str, str):
+                # Try common datetime formats
+                for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f']:
+                    try:
+                        dt = datetime.strptime(utc_time_str, fmt)
+                        break
+                    except ValueError:
+                        continue
+                else:
+                    return utc_time_str  # Return original if parsing fails
+            elif isinstance(utc_time_str, datetime):
+                dt = utc_time_str
+            else:
+                return str(utc_time_str)
+
+            # Return formatted time (browser will handle local timezone conversion via JavaScript)
+            return dt.strftime(format_str)
+
+        except Exception as e:
+            # Return original value if conversion fails
+            return str(utc_time_str)
 
 
 def register_shell_context(app):

@@ -1,0 +1,655 @@
+{% extends 'base.html' %}
+
+{% block title %}Configure Availability - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    .availability-page {
+        min-height: 100vh;
+        padding-top: 80px;
+    }
+
+    .availability-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .progress-indicator {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-bottom: 40px;
+    }
+
+    .progress-step {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'Actor', sans-serif;
+        color: var(--text-quinary);
+    }
+
+    .progress-step.active {
+        color: var(--accent-purple);
+        font-weight: 600;
+    }
+
+    .progress-step.completed {
+        color: var(--text-tertiary);
+    }
+
+    .progress-number {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid var(--text-quinary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+    }
+
+    .progress-step.active .progress-number {
+        background: var(--accent-purple);
+        border-color: var(--accent-purple);
+        color: #fff;
+    }
+
+    .progress-step.completed .progress-number {
+        background: rgba(153, 9, 221, 0.3);
+        border-color: var(--accent-purple);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .form-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .form-subtitle {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-quaternary);
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 40px;
+    }
+
+    .section-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+
+    .form-control {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+        background: var(--input-focus-bg);
+    }
+
+    .form-help {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        color: var(--text-quinary);
+        margin-top: 4px;
+    }
+
+    .day-schedule {
+        margin-bottom: 20px;
+        padding: 20px;
+        background: rgba(153, 9, 221, 0.05);
+        border: 1px solid rgba(153, 9, 221, 0.2);
+        border-radius: 8px;
+    }
+
+    .day-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .day-checkbox {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .day-name {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        flex: 1;
+    }
+
+    .time-slots {
+        margin-left: 32px;
+    }
+
+    .time-slot {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .time-slot input[type="time"] {
+        flex: 1;
+    }
+
+    .btn-add-slot {
+        background: transparent;
+        border: 1px solid var(--accent-purple);
+        color: var(--accent-purple);
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-slot:hover {
+        background: rgba(153, 9, 221, 0.1);
+    }
+
+    .btn-remove-slot {
+        background: transparent;
+        border: 1px solid #ef4444;
+        color: #ef4444;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+
+    .btn-remove-slot:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        justify-content: flex-end;
+    }
+
+    .btn-submit {
+        background: rgba(255, 255, 255, 0.7);
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #000;
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .btn-submit {
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .btn-cancel {
+        border-color: rgba(0, 0, 0, 0.3);
+        color: #000;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .back-link {
+        color: #000;
+    }
+
+    .back-link:hover {
+        color: var(--accent-purple);
+        transform: translateX(-4px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="availability-page">
+    <div class="availability-container">
+        <!-- Back Link -->
+        {% if edit_mode %}
+        <a href="{{ url_for('resource.detail', resource_id=session.get('resource_edit', {}).get('resource_id')) }}" class="back-link">
+            ← Back to Resource
+        </a>
+        {% else %}
+        <a href="{{ url_for('resource.create') }}" class="back-link">
+            ← Back to Resource Details
+        </a>
+        {% endif %}
+
+        <!-- Progress Indicator -->
+        <div class="progress-indicator">
+            <div class="progress-step completed">
+                <div class="progress-number">1</div>
+                <span>Resource Details</span>
+            </div>
+            <div class="progress-step active">
+                <div class="progress-number">2</div>
+                <span>Availability Rules</span>
+            </div>
+        </div>
+
+        <!-- Form Header -->
+        <div class="form-header">
+            <h1 class="form-title">Configure Availability</h1>
+            <p class="form-subtitle">Set up when this resource can be booked</p>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('resource.configure_availability') }}" id="availability-form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Booking Duration Constraints -->
+                <div class="section-title">Booking Duration</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div class="form-group">
+                        <label class="form-label required">Minimum Duration (minutes)</label>
+                        <input type="number" name="min_duration" class="form-control" value="30" min="15" step="15" required>
+                        <div class="form-help">Shortest booking allowed</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label required">Maximum Duration (minutes)</label>
+                        <input type="number" name="max_duration" class="form-control" value="120" min="30" step="15" required>
+                        <div class="form-help">Longest booking allowed</div>
+                    </div>
+                </div>
+
+                <!-- Advance Booking Settings -->
+                <div class="section-title">Advance Booking</div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                    <div class="form-group">
+                        <label class="form-label required">Advance Booking Days</label>
+                        <input type="number" name="advance_days" class="form-control" value="14" min="1" max="90" required>
+                        <div class="form-help">How far ahead users can book</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Buffer Time (minutes)</label>
+                        <input type="number" name="buffer_time" class="form-control" value="0" min="0" step="5">
+                        <div class="form-help">Time between bookings</div>
+                    </div>
+                </div>
+
+                <!-- Listing Lifecycle -->
+                <div class="section-title">Listing Lifecycle</div>
+
+                <div class="form-group" style="margin-bottom: 30px;">
+                    <label class="form-label required">Status</label>
+                    <select name="status" class="form-control" required style="width: 100%; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 8px; padding: 12px 16px; color: var(--text-primary); font-family: 'Actor', sans-serif; font-size: 1rem;">
+                        <option value="draft">Draft - Hidden from public, not bookable</option>
+                        <option value="published" selected>Published - Visible and bookable</option>
+                        <option value="archived">Archived - Hidden and not bookable</option>
+                    </select>
+                    <div class="form-help">Control whether this resource is visible and available for booking</div>
+                </div>
+
+                <!-- Weekly Schedule -->
+                <div class="section-title">Weekly Schedule</div>
+                <p class="form-help" style="margin-bottom: 20px;">Select which days the resource is available and define time slots</p>
+
+                <div id="weekly-schedule">
+                    {% for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+                    <div class="day-schedule">
+                        <div class="day-header">
+                            <input type="checkbox" class="day-checkbox" id="{{ day.lower() }}-enabled" name="{{ day.lower() }}_enabled" checked>
+                            <label for="{{ day.lower() }}-enabled" class="day-name">{{ day }}</label>
+                        </div>
+                        <div class="time-slots" id="{{ day.lower() }}-slots">
+                            <div class="time-slot">
+                                <input type="time" name="{{ day.lower() }}_start_1" class="form-control" value="09:00">
+                                <span style="color: var(--text-tertiary);">to</span>
+                                <input type="time" name="{{ day.lower() }}_end_1" class="form-control" value="17:00">
+                                <button type="button" class="btn-remove-slot" onclick="removeTimeSlot(this)" style="visibility: hidden;">Remove</button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-add-slot" onclick="addTimeSlot('{{ day.lower() }}')">+ Add Time Slot</button>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Hidden input to store slot count -->
+                <input type="hidden" name="slot_counts" id="slot-counts">
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('resource.index') }}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-submit">{{ 'Save Changes' if edit_mode else 'Create Resource' }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Track slot counts for each day
+const slotCounts = {
+    'monday': 1,
+    'tuesday': 1,
+    'wednesday': 1,
+    'thursday': 1,
+    'friday': 1,
+    'saturday': 1,
+    'sunday': 1
+};
+
+// Pre-populate form with existing availability rules if in edit mode
+{% if edit_mode and existing_rules %}
+const existingRules = {{ existing_rules | tojson }};
+
+// Populate booking duration fields
+if (existingRules.booking_duration_min) {
+    document.querySelector('input[name="min_duration"]').value = existingRules.booking_duration_min;
+}
+if (existingRules.booking_duration_max) {
+    document.querySelector('input[name="max_duration"]').value = existingRules.booking_duration_max;
+}
+if (existingRules.advance_booking_days) {
+    document.querySelector('input[name="advance_days"]').value = existingRules.advance_booking_days;
+}
+if (existingRules.buffer_time_minutes !== undefined) {
+    document.querySelector('input[name="buffer_time"]').value = existingRules.buffer_time_minutes;
+}
+
+// Populate weekly schedule
+if (existingRules.weekly_schedule) {
+    // First, uncheck all days and clear default slots
+    const allDays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    allDays.forEach(day => {
+        const checkbox = document.getElementById(`${day}-enabled`);
+        const slotsContainer = document.getElementById(`${day}-slots`);
+        const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
+
+        // Uncheck and hide
+        checkbox.checked = false;
+        slotsContainer.style.display = 'none';
+        addButton.style.display = 'none';
+
+        // Clear existing slots
+        slotsContainer.innerHTML = '';
+        slotCounts[day] = 0;
+    });
+
+    // Now populate with existing schedule
+    existingRules.weekly_schedule.forEach(daySchedule => {
+        const day = daySchedule.day.toLowerCase();
+        const checkbox = document.getElementById(`${day}-enabled`);
+        const slotsContainer = document.getElementById(`${day}-slots`);
+        const addButton = slotsContainer.parentElement.querySelector('.btn-add-slot');
+
+        // Enable the day
+        checkbox.checked = true;
+        slotsContainer.style.display = 'block';
+        addButton.style.display = 'inline-block';
+
+        // Add time slots
+        daySchedule.slots.forEach((slot, index) => {
+            slotCounts[day]++;
+            const slotNumber = slotCounts[day];
+
+            const slotDiv = document.createElement('div');
+            slotDiv.className = 'time-slot';
+            slotDiv.innerHTML = `
+                <input type="time" name="${day}_start_${slotNumber}" class="form-control" value="${slot.start_time}" data-day="${day}">
+                <span style="color: var(--text-tertiary);">to</span>
+                <input type="time" name="${day}_end_${slotNumber}" class="form-control" value="${slot.end_time}" data-day="${day}">
+                <button type="button" class="btn-remove-slot" onclick="removeTimeSlot(this)" ${index === 0 ? 'style="visibility: hidden;"' : ''}>Remove</button>
+            `;
+
+            slotsContainer.appendChild(slotDiv);
+        });
+    });
+}
+{% endif %}
+
+// Get the minimum duration from the form
+function getMinDuration() {
+    const minInput = document.querySelector('input[name="min_duration"]');
+    return parseInt(minInput.value) || 30;
+}
+
+// Convert time string (HH:MM) to minutes since midnight
+function timeToMinutes(timeStr) {
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+// Convert minutes since midnight to time string (HH:MM)
+function minutesToTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+}
+
+// Get the last end time for a given day
+function getLastEndTime(day) {
+    const slotContainer = document.getElementById(`${day}-slots`);
+    const slots = slotContainer.querySelectorAll('.time-slot');
+
+    if (slots.length === 0) return null;
+
+    const lastSlot = slots[slots.length - 1];
+    const endInput = lastSlot.querySelector('input[type="time"]:last-of-type');
+    return endInput.value;
+}
+
+function addTimeSlot(day) {
+    const lastEndTime = getLastEndTime(day);
+
+    if (!lastEndTime) {
+        alert('Please set a valid time for the existing slot first.');
+        return;
+    }
+
+    // Calculate new start time (= last end time)
+    const startTime = lastEndTime;
+
+    // Calculate new end time (start time + min duration)
+    const minDuration = getMinDuration();
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = startMinutes + minDuration;
+
+    // Check if end time exceeds 24:00
+    if (endMinutes >= 24 * 60) {
+        alert('Cannot add more time slots. The next slot would extend past midnight.');
+        return;
+    }
+
+    const endTime = minutesToTime(endMinutes);
+
+    slotCounts[day]++;
+    const slotContainer = document.getElementById(`${day}-slots`);
+    const slotNumber = slotCounts[day];
+
+    const slotDiv = document.createElement('div');
+    slotDiv.className = 'time-slot';
+    slotDiv.innerHTML = `
+        <input type="time" name="${day}_start_${slotNumber}" class="form-control" value="${startTime}" data-day="${day}">
+        <span style="color: var(--text-tertiary);">to</span>
+        <input type="time" name="${day}_end_${slotNumber}" class="form-control" value="${endTime}" data-day="${day}">
+        <button type="button" class="btn-remove-slot" onclick="removeTimeSlot(this)">Remove</button>
+    `;
+
+    slotContainer.appendChild(slotDiv);
+
+    // Add validation listeners to the new inputs
+    const startInput = slotDiv.querySelector('input[type="time"]:first-of-type');
+    const endInput = slotDiv.querySelector('input[type="time"]:last-of-type');
+
+    startInput.addEventListener('change', function() {
+        validateTimeSlot(this);
+    });
+
+    endInput.addEventListener('change', function() {
+        validateTimeSlot(this);
+    });
+}
+
+function removeTimeSlot(button) {
+    button.parentElement.remove();
+}
+
+// Validate time slot to ensure end > start
+function validateTimeSlot(input) {
+    const slot = input.closest('.time-slot');
+    const startInput = slot.querySelector('input[type="time"]:first-of-type');
+    const endInput = slot.querySelector('input[type="time"]:last-of-type');
+
+    const startMinutes = timeToMinutes(startInput.value);
+    const endMinutes = timeToMinutes(endInput.value);
+
+    if (endMinutes <= startMinutes) {
+        alert('End time must be after start time.');
+        // Reset to start time + min duration
+        const minDuration = getMinDuration();
+        endInput.value = minutesToTime(startMinutes + minDuration);
+    }
+}
+
+// Enable/disable time slots based on checkbox
+document.querySelectorAll('.day-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', function() {
+        const day = this.id.replace('-enabled', '');
+        const slots = document.getElementById(`${day}-slots`);
+        const addButton = slots.parentElement.querySelector('.btn-add-slot');
+
+        if (this.checked) {
+            slots.style.display = 'block';
+            addButton.style.display = 'inline-block';
+        } else {
+            slots.style.display = 'none';
+            addButton.style.display = 'none';
+        }
+    });
+});
+
+// Add validation to all existing time inputs
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.time-slot input[type="time"]').forEach(input => {
+        input.addEventListener('change', function() {
+            validateTimeSlot(this);
+        });
+    });
+});
+
+// Store slot counts before form submission
+document.getElementById('availability-form').addEventListener('submit', function(e) {
+    // Validate all time slots before submission
+    let isValid = true;
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        const startInput = slot.querySelector('input[type="time"]:first-of-type');
+        const endInput = slot.querySelector('input[type="time"]:last-of-type');
+
+        if (startInput && endInput) {
+            const startMinutes = timeToMinutes(startInput.value);
+            const endMinutes = timeToMinutes(endInput.value);
+
+            if (endMinutes <= startMinutes) {
+                isValid = false;
+                alert('All end times must be after their corresponding start times.');
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+
+    if (isValid) {
+        document.getElementById('slot-counts').value = JSON.stringify(slotCounts);
+    }
+});
+</script>
+{% endblock %}

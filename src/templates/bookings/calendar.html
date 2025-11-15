@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Calendar - {{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    .calendar-page {
+        min-height: 100vh;
+        padding-top: 80px;
+    }
+
+    .calendar-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .calendar-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+    .calendar-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .bookings-list {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 24px;
+    }
+
+    .booking-item {
+        padding: 16px;
+        margin-bottom: 12px;
+        background: rgba(153, 9, 221, 0.1);
+        border-radius: 8px;
+        font-family: 'Actor', sans-serif;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-purple);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="calendar-page">
+    <div class="calendar-container">
+        <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="back-link">
+            ← Back to Resource
+        </a>
+
+        <div class="calendar-header">
+            <h1 class="calendar-title">{{ resource['title'] }} - Calendar</h1>
+            <p style="font-family: 'Actor', sans-serif; color: var(--text-quaternary);">
+                {{ month }}/{{ year }}
+            </p>
+        </div>
+
+        <div class="bookings-list">
+            <h2 style="font-family: 'Noto Serif', serif; color: var(--text-primary); margin-bottom: 20px;">
+                Scheduled Bookings
+            </h2>
+
+            {% if bookings %}
+                {% for booking in bookings %}
+                    <div class="booking-item">
+                        <strong>{{ booking.start_datetime.strftime('%B %d, %Y') }}</strong><br>
+                        {{ booking.start_datetime.strftime('%I:%M %p') }} - {{ booking.end_datetime.strftime('%I:%M %p') }}<br>
+                        {% if booking._requester_name %}
+                            Booked by: {{ booking._requester_name }}
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p style="text-align: center; color: var(--text-quaternary); padding: 40px;">
+                    No bookings scheduled for this month
+                </p>
+            {% endif %}
+        </div>
+
+        {% if not is_owner %}
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ url_for('booking.create', resource_id=resource.resource_id) }}"
+                   style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+                          padding: 14px 32px;
+                          color: #fff;
+                          border-radius: 8px;
+                          text-decoration: none;
+                          font-family: 'Actor', sans-serif;
+                          display: inline-block;">
+                    Book This Resource
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

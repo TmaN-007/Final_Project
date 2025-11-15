@@ -64,6 +64,81 @@ class MessageDAL(BaseDAL):
         return cls.execute_update(query, (resource_id, booking_id, subject))
 
     @classmethod
+    def add_thread_participant(cls, thread_id: int, user_id: int) -> bool:
+        """
+        Add a participant to a message thread.
+
+        Args:
+            thread_id (int): Thread ID
+            user_id (int): User ID to add
+
+        Returns:
+            bool: True if successful
+
+        Example:
+            >>> MessageDAL.add_thread_participant(1, 5)
+        """
+        query = """
+            INSERT OR IGNORE INTO message_thread_participants (
+                thread_id, user_id, joined_at
+            ) VALUES (?, ?, datetime('now'))
+        """
+        return cls.execute_update(query, (thread_id, user_id)) > 0
+
+    @classmethod
+    def get_thread_participants(cls, thread_id: int) -> List[Dict[str, Any]]:
+        """
+        Get all participants in a thread.
+
+        Args:
+            thread_id (int): Thread ID
+
+        Returns:
+            List[Dict]: List of participant info
+
+        Example:
+            >>> participants = MessageDAL.get_thread_participants(1)
+        """
+        query = """
+            SELECT
+                mtp.user_id,
+                u.name as full_name,
+                u.email,
+                u.role,
+                mtp.joined_at
+            FROM message_thread_participants mtp
+            JOIN users u ON mtp.user_id = u.user_id
+            WHERE mtp.thread_id = ?
+            ORDER BY mtp.joined_at ASC
+        """
+        return cls.execute_query(query, (thread_id,))
+
+    @classmethod
+    def get_messages_in_thread(cls, thread_id: int) -> List[Dict[str, Any]]:
+        """
+        Get all messages in a thread.
+
+        Args:
+            thread_id (int): Thread ID
+
+        Returns:
+            List[Dict]: List of messages
+
+        Example:
+            >>> messages = MessageDAL.get_messages_in_thread(1)
+        """
+        query = """
+            SELECT
+                m.*,
+                u.name as sender_name
+            FROM messages m
+            LEFT JOIN users u ON m.sender_id = u.user_id
+            WHERE m.thread_id = ?
+            ORDER BY m.sent_at ASC
+        """
+        return cls.execute_query(query, (thread_id,))
+
+    @classmethod
     def get_thread_by_id(cls, thread_id: int) -> Optional[Dict[str, Any]]:
         """
         Get message thread by ID.
@@ -89,6 +164,44 @@ class MessageDAL(BaseDAL):
         """
         results = cls.execute_query(query, (thread_id,))
         return results[0] if results else None
+
+    @classmethod
+    def find_existing_thread(cls, user_id: int, other_user_id: int, resource_id: int = None) -> Optional[int]:
+        """
+        Find an existing thread between two users for a specific resource.
+
+        Args:
+            user_id: First user ID
+            other_user_id: Second user ID
+            resource_id: Resource ID (optional)
+
+        Returns:
+            Optional[int]: Thread ID if found, None otherwise
+        """
+        query = """
+            SELECT mt.thread_id
+            FROM message_threads mt
+            WHERE mt.thread_id IN (
+                SELECT mtp1.thread_id
+                FROM message_thread_participants mtp1
+                WHERE mtp1.user_id = ?
+            )
+            AND mt.thread_id IN (
+                SELECT mtp2.thread_id
+                FROM message_thread_participants mtp2
+                WHERE mtp2.user_id = ?
+            )
+        """
+        params = [user_id, other_user_id]
+
+        if resource_id:
+            query += " AND mt.resource_id = ?"
+            params.append(resource_id)
+
+        query += " ORDER BY mt.updated_at DESC LIMIT 1"
+
+        results = cls.execute_query(query, tuple(params))
+        return results[0]['thread_id'] if results else None
 
     @classmethod
     def get_threads_by_user(
@@ -126,16 +239,31 @@ class MessageDAL(BaseDAL):
                    AND m.is_read = 0) as unread_count,
                 (SELECT m2.sent_at FROM messages m2
                  WHERE m2.thread_id = mt.thread_id
-                 ORDER BY m2.sent_at DESC LIMIT 1) as last_message_at
+                 ORDER BY m2.sent_at DESC LIMIT 1) as last_message_at,
+                (SELECT m3.content FROM messages m3
+                 WHERE m3.thread_id = mt.thread_id
+                 ORDER BY m3.sent_at DESC LIMIT 1) as last_message_content,
+                (SELECT m4.sender_id FROM messages m4
+                 WHERE m4.thread_id = mt.thread_id
+                 ORDER BY m4.sent_at DESC LIMIT 1) as last_message_sender_id,
+                (SELECT u.name FROM message_thread_participants mtp
+                 JOIN users u ON mtp.user_id = u.user_id
+                 WHERE mtp.thread_id = mt.thread_id
+                   AND mtp.user_id != ?
+                 LIMIT 1) as other_participant_name,
+                (SELECT mtp2.user_id FROM message_thread_participants mtp2
+                 WHERE mtp2.thread_id = mt.thread_id
+                   AND mtp2.user_id != ?
+                 LIMIT 1) as other_participant_id
             FROM message_threads mt
             LEFT JOIN resources r ON mt.resource_id = r.resource_id
             WHERE mt.thread_id IN (
                 SELECT DISTINCT thread_id
-                FROM messages
-                WHERE sender_id = ? OR receiver_id = ?
+                FROM message_thread_participants
+                WHERE user_id = ?
             )
         """
-        params = [user_id, user_id, user_id]
+        params = [user_id, user_id, user_id, user_id]
 
         if unread_only:
             query += " AND unread_count > 0"
@@ -654,6 +782,117 @@ class NotificationDAL(BaseDAL):
         """
         return cls.execute_update(query, (days_old,))
 
+    # ========== BOOKING-RELATED MESSAGING ==========
+
+    @classmethod
+    def create_or_get_booking_thread(cls, booking_id: int, resource_id: int, requester_id: int, resource_owner_id: int) -> int:
+        """
+        Create or get existing thread for a booking.
+
+        Args:
+            booking_id: Booking ID
+            resource_id: Resource ID
+            requester_id: User who made the booking
+            resource_owner_id: Owner of the resource
+
+        Returns:
+            int: Thread ID
+        """
+        # Check if thread exists for this booking
+        check_query = """
+            SELECT thread_id
+            FROM message_threads
+            WHERE booking_id = ?
+        """
+        existing = cls.execute_query(check_query, (booking_id,))
+
+        if existing:
+            return existing[0]['thread_id']
+
+        # Create new thread
+        thread_id = cls.create_thread(
+            subject=f'Booking Discussion',
+            resource_id=resource_id,
+            booking_id=booking_id
+        )
+
+        # Add participants
+        cls.add_thread_participant(thread_id, requester_id)
+        cls.add_thread_participant(thread_id, resource_owner_id)
+
+        return thread_id
+
+    @classmethod
+    def send_booking_notification_message(
+        cls,
+        booking_id: int,
+        resource_id: int,
+        resource_title: str,
+        requester_id: int,
+        resource_owner_id: int,
+        message_type: str,
+        start_datetime: str = None,
+        end_datetime: str = None,
+        comment: str = None
+    ) -> bool:
+        """
+        Send automated booking notification message.
+
+        Args:
+            booking_id: Booking ID
+            resource_id: Resource ID
+            resource_title: Resource title
+            requester_id: User who made the booking
+            resource_owner_id: Owner of the resource
+            message_type: Type of notification ('created', 'approved', 'rejected', 'cancelled')
+            start_datetime: Booking start time
+            end_datetime: Booking end time
+            comment: Optional comment (for rejections)
+
+        Returns:
+            bool: True if message sent successfully
+        """
+        # Create or get thread for this booking
+        thread_id = cls.create_or_get_booking_thread(
+            booking_id, resource_id, requester_id, resource_owner_id
+        )
+
+        # Generate message content based on type
+        if message_type == 'created':
+            content = f"📅 Thank you for booking '{resource_title}'! Your booking is scheduled from {start_datetime} to {end_datetime}."
+            sender_id = resource_owner_id  # Message FROM the resource owner
+            receiver_id = requester_id  # Message TO the person who booked
+
+        elif message_type == 'approved':
+            content = f"✅ Your booking for '{resource_title}' has been approved! Time: {start_datetime} to {end_datetime}."
+            sender_id = resource_owner_id
+            receiver_id = requester_id
+
+        elif message_type == 'rejected':
+            content = f"❌ Your booking request for '{resource_title}' has been declined."
+            if comment:
+                content += f"\nReason: {comment}"
+            sender_id = resource_owner_id
+            receiver_id = requester_id
+
+        elif message_type == 'cancelled':
+            content = f"🚫 Booking for '{resource_title}' ({start_datetime} to {end_datetime}) has been cancelled."
+            sender_id = requester_id
+            receiver_id = resource_owner_id
+        else:
+            return False
+
+        # Send the message
+        message_id = cls.send_message(
+            thread_id=thread_id,
+            sender_id=sender_id,
+            receiver_id=receiver_id,
+            content=content
+        )
+
+        return message_id is not None
+
     # TODO: Implement additional methods as needed:
     # - batch_create_notifications()
     # - get_notification_statistics()
+

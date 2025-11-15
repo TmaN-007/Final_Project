@@ -13,4 +13,4 @@ Utilities:
 - decorators.py: Custom Flask decorators (role-required, etc.)
 """
 
-__all__ = []
+__all__ = ['system_messaging']

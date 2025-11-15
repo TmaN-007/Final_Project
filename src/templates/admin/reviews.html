@@ -1,0 +1,410 @@
+{% extends 'base.html' %}
+
+{% block title %}Moderate Reviews - Admin Panel{% endblock %}
+
+{% block additional_css %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .back-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+    }
+
+    .filters-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        align-items: end;
+    }
+
+    .filter-group label {
+        display: block;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .filter-select {
+        width: 100%;
+        padding: 0.75rem;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+    }
+
+    .filter-button {
+        padding: 0.75rem 1.5rem;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .filter-button:hover {
+        background: #2563eb;
+    }
+
+    .clear-button {
+        padding: 0.75rem 1.5rem;
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: all 0.2s;
+    }
+
+    .clear-button:hover {
+        background: var(--hover-bg);
+        color: var(--text-primary);
+    }
+
+    .reviews-table-container {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .reviews-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .reviews-table thead {
+        background: var(--hover-bg);
+    }
+
+    .reviews-table th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .reviews-table td {
+        padding: 1rem;
+        border-top: 1px solid var(--border-color);
+        color: var(--text-primary);
+    }
+
+    .reviews-table tbody tr {
+        transition: background 0.2s;
+    }
+
+    .reviews-table tbody tr:hover {
+        background: var(--hover-bg);
+    }
+
+    .review-resource {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .review-user {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .review-comment {
+        max-width: 300px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .rating-stars {
+        color: #f59e0b;
+    }
+
+    .visibility-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .visibility-badge.visible {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .visibility-badge.hidden {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--card-bg);
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .action-btn:hover {
+        background: var(--hover-bg);
+        transform: translateY(-1px);
+    }
+
+    .action-btn.success {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .action-btn.success:hover {
+        background: #059669;
+    }
+
+    .action-btn.warning {
+        background: #f59e0b;
+        color: white;
+        border-color: #f59e0b;
+    }
+
+    .action-btn.warning:hover {
+        background: #d97706;
+    }
+
+    .action-btn.danger {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .action-btn.danger:hover {
+        background: #dc2626;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+        padding: 1rem;
+    }
+
+    .pagination-btn {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .pagination-btn:hover:not(.disabled) {
+        background: #3b82f6;
+        color: white;
+    }
+
+    .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .pagination-info {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('admin.dashboard') }}" class="back-link">← Back to Dashboard</a>
+            <h1>Moderate Reviews</h1>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" action="{{ url_for('admin.reviews') }}">
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label for="visibility">Visibility</label>
+                    <select id="visibility" name="visibility" class="filter-select">
+                        <option value="">All Reviews</option>
+                        <option value="visible" {% if request.args.get('visibility') == 'visible' %}selected{% endif %}>Visible</option>
+                        <option value="hidden" {% if request.args.get('visibility') == 'hidden' %}selected{% endif %}>Hidden</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <button type="submit" class="filter-button">Apply Filters</button>
+                </div>
+                <div class="filter-group">
+                    <a href="{{ url_for('admin.reviews') }}" class="clear-button">Clear</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reviews Table -->
+    <div class="reviews-table-container">
+        {% if result.reviews %}
+        <table class="reviews-table">
+            <thead>
+                <tr>
+                    <th>Resource</th>
+                    <th>User</th>
+                    <th>Rating</th>
+                    <th>Comment</th>
+                    <th>Visibility</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in result.reviews %}
+                <tr>
+                    <td>
+                        <div class="review-resource">{{ review.resource_title }}</div>
+                    </td>
+                    <td>
+                        <div class="review-resource">{{ review.user_name }}</div>
+                        <div class="review-user">{{ review.user_email }}</div>
+                    </td>
+                    <td>
+                        <span class="rating-stars">
+                            {% for i in range(review.rating) %}★{% endfor %}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="review-comment">{{ review.comment if review.comment else 'No comment' }}</div>
+                    </td>
+                    <td>
+                        <span class="visibility-badge {{ 'visible' if review.is_visible else 'hidden' }}">
+                            {{ 'Visible' if review.is_visible else 'Hidden' }}
+                        </span>
+                    </td>
+                    <td>{{ review.created_at[:10] if review.created_at else 'N/A' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            {% if review.is_visible %}
+                            <form method="POST" action="{{ url_for('admin.hide_review', review_id=review.review_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to hide this review?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="action-btn warning">Hide</button>
+                            </form>
+                            {% else %}
+                            <form method="POST" action="{{ url_for('admin.approve_review', review_id=review.review_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to approve this review?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="action-btn success">Approve</button>
+                            </form>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('admin.delete_review', review_id=review.review_id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to permanently delete this review?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="action-btn danger">Delete</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Pagination -->
+        {% if result.pagination.total_pages > 1 %}
+        <div class="pagination">
+            {% if result.pagination.has_prev %}
+            <a href="{{ url_for('admin.reviews', page=result.pagination.page - 1, visibility=request.args.get('visibility', '')) }}"
+               class="pagination-btn">Previous</a>
+            {% else %}
+            <span class="pagination-btn disabled">Previous</span>
+            {% endif %}
+
+            <span class="pagination-info">
+                Page {{ result.pagination.page }} of {{ result.pagination.total_pages }}
+                ({{ result.pagination.total_count }} total)
+            </span>
+
+            {% if result.pagination.has_next %}
+            <a href="{{ url_for('admin.reviews', page=result.pagination.page + 1, visibility=request.args.get('visibility', '')) }}"
+               class="pagination-btn">Next</a>
+            {% else %}
+            <span class="pagination-btn disabled">Next</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">⭐</div>
+            <h3>No reviews found</h3>
+            <p>Try adjusting your filters</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

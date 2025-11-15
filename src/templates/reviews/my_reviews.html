@@ -1,0 +1,289 @@
+{% extends 'base.html' %}
+
+{% block title %}My Reviews - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* My Reviews Page Styles */
+    .reviews-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .reviews-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .page-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: #fff;
+    }
+
+    [data-theme="light"] .page-title {
+        color: #1a1a1a;
+    }
+
+    .page-subtitle {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.1rem;
+        color: var(--text-tertiary);
+        margin-bottom: 40px;
+    }
+
+    .review-card {
+        background: rgba(30, 30, 30, 0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(153, 9, 221, 0.2);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .review-card {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(153, 9, 221, 0.2);
+    }
+
+    .review-card:hover {
+        border-color: rgba(153, 9, 221, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 16px;
+        gap: 16px;
+    }
+
+    .review-resource {
+        flex: 1;
+    }
+
+    .resource-link {
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 1.2rem;
+        color: var(--accent-purple);
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .resource-link:hover {
+        color: var(--accent-purple-light);
+        text-decoration: underline;
+    }
+
+    .review-date {
+        font-family: 'Actor', sans-serif;
+        color: var(--text-quaternary);
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }
+
+    .review-rating {
+        color: #fbbf24;
+        font-size: 1.5rem;
+    }
+
+    .review-body {
+        margin-bottom: 16px;
+    }
+
+    .review-comment {
+        font-family: 'Actor', sans-serif;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+    }
+
+    .btn-edit {
+        font-family: 'Actor', sans-serif;
+        color: var(--accent-purple);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-edit:hover {
+        text-decoration: underline;
+    }
+
+    .btn-delete {
+        background: none;
+        border: none;
+        color: #ef4444;
+        font-family: 'Actor', sans-serif;
+        cursor: pointer;
+        padding: 0;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-delete:hover {
+        text-decoration: underline;
+    }
+
+    .btn-view-resource {
+        background: rgba(153, 9, 221, 0.2);
+        border: 1px solid rgba(153, 9, 221, 0.5);
+        border-radius: 8px;
+        padding: 6px 16px;
+        color: var(--accent-purple);
+        font-family: 'Actor', sans-serif);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-view-resource:hover {
+        background: rgba(153, 9, 221, 0.3);
+        border-color: rgba(153, 9, 221, 0.8);
+    }
+
+    .host-response-section {
+        margin-top: 16px;
+        padding: 16px;
+        background: rgba(153, 9, 221, 0.1);
+        border-left: 3px solid var(--accent-purple);
+        border-radius: 8px;
+    }
+
+    .host-response-label {
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        color: var(--accent-purple);
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .host-response-text {
+        font-family: 'Actor', sans-serif;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+    }
+
+    .empty-icon {
+        font-size: 4rem;
+        margin-bottom: 20px;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 12px;
+    }
+
+    .empty-text {
+        font-family: 'Actor', sans-serif;
+        color: var(--text-tertiary);
+        font-size: 1rem;
+        margin-bottom: 24px;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(153, 9, 221, 0.4);
+        color: #fff;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="reviews-page">
+    <div class="reviews-container">
+        <h1 class="page-title">My Reviews</h1>
+        <p class="page-subtitle">All reviews you've written for resources</p>
+
+        {% if reviews %}
+            <!-- Reviews List -->
+            {% for review in reviews %}
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="review-resource">
+                        <a href="{{ url_for('resource.detail', resource_id=review.resource_id) }}" class="resource-link">
+                            {{ review.resource_title or 'Resource' }}
+                        </a>
+                        <div class="review-date">{{ review.get_time_ago() }}</div>
+                    </div>
+                    <div class="review-rating">
+                        {{ review.get_star_display() }}
+                    </div>
+                </div>
+
+                {% if review.comment %}
+                <div class="review-body">
+                    <p class="review-comment">{{ review.comment }}</p>
+                </div>
+                {% endif %}
+
+                {% if review.host_response %}
+                <div class="host-response-section">
+                    <div class="host-response-label">Response from Owner</div>
+                    <div class="host-response-text">{{ review.host_response }}</div>
+                </div>
+                {% endif %}
+
+                <div class="review-actions">
+                    <a href="{{ url_for('review.edit', review_id=review.review_id) }}" class="btn-edit">Edit</a>
+                    <form action="{{ url_for('review.delete', review_id=review.review_id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-delete">Delete</button>
+                    </form>
+                    <span style="margin-left: auto;">
+                        <a href="{{ url_for('resource.detail', resource_id=review.resource_id) }}" class="btn-view-resource">View Resource</a>
+                    </span>
+                </div>
+            </div>
+            {% endfor %}
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <div class="empty-icon">⭐</div>
+                <h2 class="empty-title">No Reviews Yet</h2>
+                <p class="empty-text">You haven't written any reviews. Book a resource and leave a review after completing your booking!</p>
+                <a href="{{ url_for('resource.index') }}" class="btn-primary">Browse Resources</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

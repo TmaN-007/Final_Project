@@ -1,0 +1,610 @@
+{% extends 'base.html' %}
+
+{% block title %}User Details - {{ user.name }} - Admin Panel{% endblock %}
+
+{% block additional_css %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .back-link {
+        color: var(--text-secondary);
+        text-decoration: none;
+        font-size: 0.95rem;
+        transition: color 0.2s;
+    }
+
+    .back-link:hover {
+        color: var(--text-primary);
+    }
+
+    .user-info-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .user-header {
+        display: flex;
+        gap: 2rem;
+        align-items: start;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .user-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: var(--hover-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--text-secondary);
+    }
+
+    .user-main-info h2 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .user-email {
+        color: var(--text-secondary);
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .user-badges {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .role-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .role-badge.admin {
+        background: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+
+    .role-badge.staff {
+        background: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
+    }
+
+    .role-badge.student {
+        background: rgba(107, 114, 128, 0.1);
+        color: #6b7280;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.35rem 0.85rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .status-badge.active {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge.banned {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+        font-weight: 700;
+    }
+
+    .user-details-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .detail-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        color: var(--text-primary);
+        font-weight: 500;
+    }
+
+    .actions-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .actions-section h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .actions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .action-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .action-label {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .action-select {
+        padding: 0.75rem;
+        background: var(--input-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        cursor: pointer;
+    }
+
+    .action-btn {
+        padding: 0.75rem 1.5rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--card-bg);
+        color: var(--text-primary);
+    }
+
+    .action-btn:hover {
+        background: var(--hover-bg);
+        transform: translateY(-1px);
+    }
+
+    .action-btn.danger {
+        background: #ef4444;
+        color: white;
+        border-color: #ef4444;
+    }
+
+    .action-btn.danger:hover {
+        background: #dc2626;
+    }
+
+    .action-btn.success {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    .action-btn.success:hover {
+        background: #059669;
+    }
+
+    .activity-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .activity-section h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1.5rem;
+    }
+
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .activity-item {
+        padding: 1rem;
+        background: var(--hover-bg);
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .activity-info h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .activity-info p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .activity-date {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Three-column layout for activity sections */
+    .activity-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .activity-section {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .activity-section h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .activity-list {
+        flex-grow: 1;
+        overflow-y: auto;
+        max-height: 600px;
+    }
+
+    .pagination-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .pagination-arrow {
+        padding: 0.5rem 1rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+
+    .pagination-arrow:hover:not(.disabled) {
+        background: #3b82f6;
+        color: white;
+        border-color: #3b82f6;
+    }
+
+    .pagination-arrow.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .pagination-page-info {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+    }
+
+    @media (max-width: 1200px) {
+        .activity-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="page-header">
+        <div>
+            <a href="{{ url_for('admin.users') }}" class="back-link">← Back to Users</a>
+            <h1>User Details</h1>
+        </div>
+    </div>
+
+    <!-- User Information Card -->
+    <div class="user-info-card">
+        <div class="user-header">
+            <div class="user-avatar">
+                {% if user.profile_image %}
+                <img src="{{ user.profile_image }}" alt="{{ user.name }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                {% else %}
+                👤
+                {% endif %}
+            </div>
+            <div class="user-main-info">
+                <h2>{{ user.name }}</h2>
+                <div class="user-email">{{ user.email }}</div>
+                <div class="user-badges">
+                    <span class="role-badge {{ user.role }}">{{ user.role }}</span>
+                    <span class="status-badge {{ user.status }}">{{ user.status }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-details-grid">
+            <div class="detail-item">
+                <div class="detail-label">User ID</div>
+                <div class="detail-value">{{ user.user_id }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Last Login</div>
+                <div class="detail-value">{{ user.last_login[:16] if user.last_login else 'Never' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Joined Date</div>
+                <div class="detail-value">{{ user.created_at[:10] if user.created_at else 'N/A' }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Section -->
+    {% if user.user_id != current_user.user_id %}
+    <div class="actions-section">
+        <h3>User Actions</h3>
+        <div class="actions-grid">
+            <div class="action-group">
+                <div class="action-label">Change Role</div>
+                <form method="POST" action="{{ url_for('admin.change_user_role', user_id=user.user_id) }}" id="roleFormDetail">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <select name="role" class="action-select" onchange="confirmRoleChangeDetail(this, '{{ user.name }}', '{{ user.role }}')">
+                        <option value="">Select Role</option>
+                        <option value="student" {% if user.role == 'student' %}disabled{% endif %}>Student</option>
+                        <option value="staff" {% if user.role == 'staff' %}disabled{% endif %}>Staff</option>
+                        <option value="admin" {% if user.role == 'admin' %}disabled{% endif %}>Admin</option>
+                    </select>
+                </form>
+            </div>
+
+            <div class="action-group">
+                <div class="action-label">Account Status</div>
+                {% if user.is_banned %}
+                <form method="POST" action="{{ url_for('admin.unban_user', user_id=user.user_id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="action-btn success">Unban User</button>
+                </form>
+                {% else %}
+                <form method="POST" action="{{ url_for('admin.ban_user', user_id=user.user_id) }}" onsubmit="return confirm('Are you sure you want to ban {{ user.name }}?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="action-btn danger">Ban User</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- User Activity Grid (Three Columns) -->
+    <div class="activity-grid" id="user-activity">
+        <!-- User Resources Column -->
+        <div class="activity-section">
+            <h3>User Resources ({{ user_resources|length }})</h3>
+            {% if user_resources %}
+            {% set resources_start = (resources_page - 1) * 10 %}
+            {% set resources_end = resources_start + 10 %}
+            {% set resources_total_pages = ((user_resources|length - 1) // 10 + 1) if user_resources|length > 0 else 1 %}
+            <div class="activity-list">
+                {% for resource in user_resources[resources_start:resources_end] %}
+                <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" style="text-decoration: none; color: inherit;">
+                    <div class="activity-item" style="cursor: pointer;">
+                        <div class="activity-info">
+                            <h4>{{ resource.title }}</h4>
+                            <p>{{ resource.description[:100] if resource.description else 'No description' }}...</p>
+                        </div>
+                        <div class="activity-date">{{ resource.created_at[:10] if resource.created_at else 'N/A' }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if user_resources|length > 10 %}
+            <div class="pagination-controls">
+                {% if resources_page > 1 %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page-1, bookings_page=bookings_page, reviews_page=reviews_page) }}#user-activity" class="pagination-arrow">← Prev</a>
+                {% else %}
+                <span class="pagination-arrow disabled">← Prev</span>
+                {% endif %}
+                <span class="pagination-page-info">{{ resources_start + 1 }}-{{ [resources_end, user_resources|length]|min }} of {{ user_resources|length }}</span>
+                {% if resources_page < resources_total_pages %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page+1, bookings_page=bookings_page, reviews_page=reviews_page) }}#user-activity" class="pagination-arrow">Next →</a>
+                {% else %}
+                <span class="pagination-arrow disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📚</div>
+                <p>No resources found</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- User Bookings Column -->
+        <div class="activity-section">
+            <h3>User Bookings ({{ user_bookings|length }})</h3>
+            {% if user_bookings %}
+            {% set bookings_start = (bookings_page - 1) * 10 %}
+            {% set bookings_end = bookings_start + 10 %}
+            {% set bookings_total_pages = ((user_bookings|length - 1) // 10 + 1) if user_bookings|length > 0 else 1 %}
+            <div class="activity-list">
+                {% for booking in user_bookings[bookings_start:bookings_end] %}
+                <a href="{{ url_for('admin.bookings', booking_id=booking.booking_id) }}" style="text-decoration: none; color: inherit;">
+                    <div class="activity-item" style="cursor: pointer;">
+                        <div class="activity-info">
+                            <h4>{{ booking.resource_title }}</h4>
+                            <p><strong>Status:</strong> <span class="status-badge {{ booking.status }}">{{ booking.status }}</span></p>
+                            <p><strong>Time:</strong> {{ booking.start_time[:16] if booking.start_time else 'N/A' }} - {{ booking.end_time[:16] if booking.end_time else 'N/A' }}</p>
+                            {% if booking.resource_location %}
+                            <p><strong>Location:</strong> {{ booking.resource_location }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="activity-date">{{ booking.created_at[:10] if booking.created_at else 'N/A' }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if user_bookings|length > 10 %}
+            <div class="pagination-controls">
+                {% if bookings_page > 1 %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page, bookings_page=bookings_page-1, reviews_page=reviews_page) }}#user-activity" class="pagination-arrow">← Prev</a>
+                {% else %}
+                <span class="pagination-arrow disabled">← Prev</span>
+                {% endif %}
+                <span class="pagination-page-info">{{ bookings_start + 1 }}-{{ [bookings_end, user_bookings|length]|min }} of {{ user_bookings|length }}</span>
+                {% if bookings_page < bookings_total_pages %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page, bookings_page=bookings_page+1, reviews_page=reviews_page) }}#user-activity" class="pagination-arrow">Next →</a>
+                {% else %}
+                <span class="pagination-arrow disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">📅</div>
+                <p>No bookings found</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- User Reviews Column -->
+        <div class="activity-section">
+            <h3>User Reviews ({{ user_reviews|length }})</h3>
+            {% if user_reviews %}
+            {% set reviews_start = (reviews_page - 1) * 10 %}
+            {% set reviews_end = reviews_start + 10 %}
+            {% set reviews_total_pages = ((user_reviews|length - 1) // 10 + 1) if user_reviews|length > 0 else 1 %}
+            <div class="activity-list">
+                {% for review in user_reviews[reviews_start:reviews_end] %}
+                <a href="{{ url_for('resource.detail', resource_id=review.resource_id) }}" style="text-decoration: none; color: inherit;">
+                    <div class="activity-item" style="cursor: pointer;">
+                        <div class="activity-info">
+                            <h4>Rating: {{ review.rating }}/5</h4>
+                            <p>{{ review.comment[:100] if review.comment else 'No comment' }}...</p>
+                        </div>
+                        <div class="activity-date">{{ review.created_at[:10] if review.created_at else 'N/A' }}</div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% if user_reviews|length > 10 %}
+            <div class="pagination-controls">
+                {% if reviews_page > 1 %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page, bookings_page=bookings_page, reviews_page=reviews_page-1) }}#user-activity" class="pagination-arrow">← Prev</a>
+                {% else %}
+                <span class="pagination-arrow disabled">← Prev</span>
+                {% endif %}
+                <span class="pagination-page-info">{{ reviews_start + 1 }}-{{ [reviews_end, user_reviews|length]|min }} of {{ user_reviews|length }}</span>
+                {% if reviews_page < reviews_total_pages %}
+                <a href="{{ url_for('admin.user_detail', user_id=user.user_id, resources_page=resources_page, bookings_page=bookings_page, reviews_page=reviews_page+1) }}#user-activity" class="pagination-arrow">Next →</a>
+                {% else %}
+                <span class="pagination-arrow disabled">Next →</span>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon">⭐</div>
+                <p>No reviews found</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Confirm role change before submitting
+function confirmRoleChangeDetail(selectElement, userName, currentRole) {
+    const newRole = selectElement.value;
+
+    // If no role selected (default option), do nothing
+    if (!newRole) {
+        return;
+    }
+
+    // Ask for confirmation
+    const confirmed = confirm(`Are you sure you want to change ${userName}'s role from ${currentRole} to ${newRole}?`);
+
+    if (confirmed) {
+        // Submit the form
+        document.getElementById('roleFormDetail').submit();
+    } else {
+        // Reset the select to empty option
+        selectElement.value = '';
+    }
+}
+</script>
+{% endblock %}

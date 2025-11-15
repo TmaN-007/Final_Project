@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Join Waitlist - {{ resource.title }} - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    .waitlist-page {
+        min-height: 100vh;
+        padding-top: 80px;
+    }
+
+    .form-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--accent-purple);
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        margin-bottom: 20px;
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 40px;
+    }
+
+    .form-title {
+        font-family: 'Noto Serif', serif;
+        font-size: 2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-control {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        width: 100%;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, rgba(153, 9, 221, 0.8), rgba(134, 70, 238, 0.8));
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        width: 100%;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="waitlist-page">
+    <div class="form-container">
+        <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="back-link">
+            ← Back to Resource
+        </a>
+
+        <div class="form-card">
+            <h1 class="form-title">Join Waitlist</h1>
+            <p style="text-align: center; font-family: 'Actor', sans-serif; color: var(--text-quaternary); margin-bottom: 30px;">
+                Get notified when {{ resource.title }} becomes available
+            </p>
+
+            <form method="POST">
+                {{ form.hidden_tag() }}
+                {{ form.resource_id }}
+
+                <div class="form-group">
+                    <label class="form-label">Desired Start Time</label>
+                    {{ form.desired_start_datetime(class="form-control") }}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Desired End Time</label>
+                    {{ form.desired_end_datetime(class="form-control") }}
+                </div>
+
+                <button type="submit" class="btn-submit">Join Waitlist</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

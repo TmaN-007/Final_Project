@@ -1,0 +1,88 @@
+{
+  "personas": [
+    {
+      "id": "student",
+      "name": "Sarah Chen",
+      "role": "student",
+      "department": "Computer Science",
+      "needs": [
+        "Study rooms for group projects",
+        "AV equipment for presentations",
+        "Quiet spaces during finals week"
+      ],
+      "pain_points": [
+        "Hard to find available study rooms during peak hours",
+        "Unclear booking procedures",
+        "Need equipment tutorials"
+      ],
+      "goals": [
+        "Book resources quickly",
+        "See real-time availability",
+        "Get reminders for upcoming bookings"
+      ],
+      "typical_resources": [
+        "Study Rooms",
+        "Projectors",
+        "Whiteboards",
+        "Laptops"
+      ]
+    },
+    {
+      "id": "staff",
+      "name": "Dr. Michael Rodriguez",
+      "role": "staff",
+      "department": "Kelley School of Business",
+      "needs": [
+        "Conference rooms for meetings",
+        "Lab equipment for research",
+        "Event spaces for workshops"
+      ],
+      "pain_points": [
+        "Approval delays for resource requests",
+        "Managing multiple booking requests",
+        "Tracking resource utilization"
+      ],
+      "goals": [
+        "Approve bookings efficiently",
+        "List department resources",
+        "Monitor resource usage analytics"
+      ],
+      "typical_resources": [
+        "Conference Rooms",
+        "Lab Equipment",
+        "Event Spaces",
+        "Research Tools"
+      ]
+    },
+    {
+      "id": "admin",
+      "name": "Jennifer Lee",
+      "role": "admin",
+      "department": "Campus Operations",
+      "needs": [
+        "System-wide resource management",
+        "User access control",
+        "Usage analytics and reporting"
+      ],
+      "pain_points": [
+        "Handling policy violations",
+        "Managing peak usage periods",
+        "Generating compliance reports"
+      ],
+      "goals": [
+        "Monitor all system activity",
+        "Enforce booking policies",
+        "Generate usage reports",
+        "Manage user roles and permissions"
+      ],
+      "typical_resources": [
+        "All Resources (system-wide access)"
+      ]
+    }
+  ],
+  "metadata": {
+    "created": "2025-11-14",
+    "purpose": "AI context grounding for personalized user experience",
+    "usage": "AI concierge references these personas to provide role-specific guidance"
+  }
+}

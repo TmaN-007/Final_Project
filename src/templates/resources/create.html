@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Resource - Campus Resource Hub{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Resource Form Styles */
+    .form-page {
+        min-height: 100vh;
+        padding-top: 80px;
+        position: relative;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .form-title {
+        font-family: 'Actor', sans-serif;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 40px;
+    }
+
+    .form-group {
+        margin-bottom: 24px;
+    }
+
+    .form-label {
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: #ef4444;
+    }
+
+    .form-control {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+        background: var(--input-focus-bg);
+    }
+
+    .form-control::placeholder {
+        color: var(--text-quinary);
+    }
+
+    .form-select {
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 8px;
+        padding: 12px 16px;
+        color: var(--text-primary);
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        width: 100%;
+        cursor: pointer;
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--accent-purple);
+        box-shadow: 0 0 0 3px rgba(153, 9, 221, 0.2);
+        background: var(--input-focus-bg);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+
+    .form-check-label {
+        font-family: 'Actor', sans-serif;
+        color: var(--text-tertiary);
+        cursor: pointer;
+    }
+
+    .form-help {
+        font-family: 'Actor', sans-serif;
+        font-size: 0.9rem;
+        color: var(--text-quinary);
+        margin-top: 4px;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 32px;
+        justify-content: flex-end;
+    }
+
+    .btn-submit {
+        background: rgba(255, 255, 255, 0.7);
+        border: none;
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #000;
+        font-family: 'Actor', sans-serif;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .btn-submit {
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-theme="light"] .btn-submit:hover {
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-cancel {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 14px 32px;
+        color: #fff;
+        font-family: 'Actor', sans-serif;
+        font-weight: 500;
+        font-size: 1.1rem;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .btn-cancel {
+        border-color: rgba(0, 0, 0, 0.3);
+        color: #000;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: #fff;
+        transform: translateY(-2px);
+    }
+
+    [data-theme="light"] .btn-cancel:hover {
+        background: rgba(0, 0, 0, 0.1);
+        border-color: rgba(0, 0, 0, 0.5);
+        color: #000;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        text-decoration: none;
+        font-family: 'Actor', sans-serif;
+        font-size: 1rem;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .back-link {
+        color: #000;
+    }
+
+    .back-link:hover {
+        color: var(--accent-purple);
+        transform: translateX(-4px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Content -->
+<div class="form-page">
+    <div class="form-container">
+        <!-- Back Link -->
+        <a href="{{ url_for('resource.index') }}" class="back-link">
+            ← Back to Resources
+        </a>
+
+        <!-- Progress Indicator -->
+        <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 40px;">
+            <div style="display: flex; align-items: center; gap: 10px; font-family: 'Actor', sans-serif; color: var(--accent-purple); font-weight: 600;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--accent-purple); border: 2px solid var(--accent-purple); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600;">1</div>
+                <span>Resource Details</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; font-family: 'Actor', sans-serif; color: var(--text-quinary);">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); border: 2px solid var(--text-quinary); display: flex; align-items: center; justify-content: center; font-weight: 600;">2</div>
+                <span>Availability Rules</span>
+            </div>
+        </div>
+
+        <!-- Form Header -->
+        <div class="form-header">
+            <h1 class="form-title">Create New Resource</h1>
+        </div>
+
+        <!-- Form Card -->
+        <div class="form-card">
+            <form method="POST" action="{{ url_for('resource.create') }}" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <!-- Title -->
+                <div class="form-group">
+                    <label class="form-label required">Resource Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="e.g., Library Study Room 101" required>
+                    <div class="form-help">Choose a clear, descriptive name for this resource</div>
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" placeholder="Describe the resource, its features, and any special requirements..."></textarea>
+                    <div class="form-help">Provide details to help students understand what this resource offers</div>
+                </div>
+
+                <!-- Category -->
+                <div class="form-group">
+                    <label class="form-label required">Category</label>
+                    <select name="category_id" class="form-select" required>
+                        <option value="">Select a category...</option>
+                        {% for category in categories %}
+                            <option value="{{ category['category_id'] }}">{{ category['name'] }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Location -->
+                <div class="form-group">
+                    <label class="form-label required">Building</label>
+                    <select name="location" class="form-select" required>
+                        <option value="">Select a building...</option>
+                        <option value="Library">Library</option>
+                        <option value="Engineering">Engineering Building</option>
+                        <option value="Student Union">Student Union</option>
+                        <option value="Computer Science">Computer Science Building</option>
+                        <option value="Media">Media Center/Arts Building</option>
+                    </select>
+                    <div class="form-help">Select the main building where this resource is located</div>
+                </div>
+
+                <!-- Location Details -->
+                <div class="form-group">
+                    <label class="form-label">Specific Location</label>
+                    <input type="text" name="location_details" class="form-control" placeholder="e.g., 2nd Floor, Room 201">
+                    <div class="form-help">Add floor, room number, or other location details</div>
+                </div>
+
+                <!-- Images -->
+                <div class="form-group">
+                    <label class="form-label">Resource Image</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <div class="form-help">Upload an image for this resource (optional, PNG/JPG/JPEG)</div>
+                </div>
+
+                <!-- Capacity (conditional - only for Study Rooms, Event Spaces, Computer Labs) -->
+                <div class="form-group" id="capacity-group" style="display: none;">
+                    <label class="form-label" id="capacity-label">Capacity</label>
+                    <input type="number" name="capacity" class="form-control" placeholder="e.g., 8" min="1">
+                    <div class="form-help" id="capacity-help">Maximum number of people</div>
+                </div>
+
+                <!-- Requires Approval -->
+                <div class="form-group">
+                    <div class="form-check">
+                        <input type="checkbox" name="requires_approval" class="form-check-input" id="requires_approval">
+                        <label class="form-check-label" for="requires_approval">
+                            Require approval for bookings
+                        </label>
+                    </div>
+                    <div class="form-help">If checked, you'll need to manually approve each booking request</div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="form-actions">
+                    <a href="{{ url_for('resource.index') }}" class="btn-cancel">Cancel</a>
+                    <button type="submit" class="btn-submit">Continue to Availability →</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Show/hide capacity field based on category selection
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.querySelector('select[name="category_id"]');
+    const capacityGroup = document.getElementById('capacity-group');
+    const capacityLabel = document.getElementById('capacity-label');
+    const capacityHelp = document.getElementById('capacity-help');
+    const capacityInput = capacityGroup.querySelector('input[name="capacity"]');
+
+    // Categories that require capacity: Study Rooms (1), Event Spaces (4), Computer Labs (7)
+    // Categories that require number of items: AV Equipment (2), Lab Instruments (3)
+    const peopleCapacityCategories = ['1', '4', '7']; // Study Rooms, Event Spaces, Computer Labs
+    const itemsCapacityCategories = ['2', '3']; // AV Equipment, Lab Instruments
+
+    function toggleCapacityField() {
+        const selectedCategory = categorySelect.value;
+
+        if (peopleCapacityCategories.includes(selectedCategory)) {
+            // Show as "Capacity" for people
+            capacityGroup.style.display = 'block';
+            capacityLabel.textContent = 'Capacity';
+            capacityHelp.textContent = 'Maximum number of people';
+            capacityInput.placeholder = 'e.g., 8';
+        } else if (itemsCapacityCategories.includes(selectedCategory)) {
+            // Show as "Number of Items" for equipment/instruments
+            capacityGroup.style.display = 'block';
+            capacityLabel.textContent = 'Number of Items';
+            capacityHelp.textContent = 'Total number of items available';
+            capacityInput.placeholder = 'e.g., 5';
+        } else {
+            // Hide for other categories
+            capacityGroup.style.display = 'none';
+            capacityInput.value = '';
+        }
+    }
+
+    // Listen for category changes
+    categorySelect.addEventListener('change', toggleCapacityField);
+
+    // Initial check
+    toggleCapacityField();
+});
+</script>
+{% endblock %}
