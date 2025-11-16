@@ -274,12 +274,12 @@ def register_template_context(app):
         }
 
     @app.template_filter('localtime')
-    def localtime_filter(utc_time_str, format_str='%Y-%m-%d %H:%M:%S'):
+    def localtime_filter(utc_time_str, format_str='%Y-%m-%d %H:%M'):
         """
         Convert UTC time string to local time for display.
 
         Args:
-            utc_time_str: UTC datetime string from database
+            utc_time_str: UTC datetime string from database (ISO format)
             format_str: Output format string
 
         Returns:
@@ -290,25 +290,48 @@ def register_template_context(app):
 
         try:
             from datetime import datetime
+            from zoneinfo import ZoneInfo
 
             # Parse the UTC time string
             if isinstance(utc_time_str, str):
-                # Try common datetime formats
-                for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f']:
-                    try:
-                        dt = datetime.strptime(utc_time_str, fmt)
-                        break
-                    except ValueError:
-                        continue
-                else:
-                    return utc_time_str  # Return original if parsing fails
+                # Try parsing ISO format (what isoformat() produces)
+                try:
+                    # Handle ISO format with or without timezone
+                    if 'T' in utc_time_str:
+                        # ISO format like 2025-11-15T10:00:00 or 2025-11-15T10:00:00+00:00
+                        dt = datetime.fromisoformat(utc_time_str.replace('Z', '+00:00'))
+                    else:
+                        # Try common datetime formats
+                        for fmt in ['%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M']:
+                            try:
+                                dt = datetime.strptime(utc_time_str, fmt)
+                                break
+                            except ValueError:
+                                continue
+                        else:
+                            return utc_time_str  # Return original if parsing fails
+                except ValueError:
+                    return utc_time_str
             elif isinstance(utc_time_str, datetime):
                 dt = utc_time_str
             else:
                 return str(utc_time_str)
 
-            # Return formatted time (browser will handle local timezone conversion via JavaScript)
-            return dt.strftime(format_str)
+            # If datetime is naive (no timezone), assume it's UTC
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=ZoneInfo('UTC'))
+
+            # Convert to system local timezone
+            import time
+            local_tz = ZoneInfo(time.tzname[time.daylight])
+            try:
+                local_dt = dt.astimezone(local_tz)
+            except:
+                # Fallback to UTC if timezone conversion fails
+                local_dt = dt
+
+            # Return formatted time
+            return local_dt.strftime(format_str)
 
         except Exception as e:
             # Return original value if conversion fails

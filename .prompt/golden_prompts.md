@@ -511,8 +511,277 @@ Test in both themes before completing.
 
 ---
 
-**Last Updated:** 2025-11-11
-**Next Prompts to Document:**
-- Resource controller completion prompts
-- Booking calendar implementation prompts
-- Test generation prompts
+## Troubleshooting & Debugging
+
+### Prompt: AWS Timezone Discrepancy Root Cause Analysis
+
+**Effectiveness:** ⭐⭐⭐⭐⭐ (5/5)
+
+**Initial Context:**
+```
+User: "so the zip file you gave didnt have the updated code or still had the
+old code... coz the one in aws is still has the time mistakes but the one
+localhost doesnt"
+
+Follow-up: "idk you're uploading something... its showing completed when its
+not even time yet but it works properly in my localhost"
+```
+
+**Why It Worked:**
+- User provided clear symptom: "works locally, broken on AWS"
+- Mentioned specific behavior: "showing completed when its not even time yet"
+- Implied context: timezone difference between environments
+- Iterative feedback helped narrow down root cause
+
+**AI Debugging Process:**
+1. Recognized environment-specific behavior pattern
+2. Hypothesized timezone difference (datetime.now() returns different values)
+3. Explained the mechanism:
+   - Localhost (Mac): datetime.now() returns EST
+   - AWS EC2 (default): datetime.now() returns UTC
+   - Booking comparison logic: end_datetime < now()
+   - UTC time is 5 hours ahead → premature completion
+4. Offered two solution approaches with trade-offs
+5. User selected simpler approach (server config)
+
+**Result:**
+- Root cause identified without SSH access to AWS
+- Created `.ebextensions/00_set_timezone.config` to configure AWS timezone
+- Fixed deployment package with timezone configuration
+
+**Solution Code:**
+```yaml
+# .ebextensions/00_set_timezone.config
+commands:
+  set_time_zone:
+    command: ln -f -s /usr/share/zoneinfo/America/New_York /etc/localtime
+```
+
+**What Made This Excellent:**
+- AI recognized symptom pattern from limited information
+- Provided explanation of underlying mechanism
+- Offered multiple solutions with trade-offs
+- Selected appropriate AWS deployment configuration method
+- No code refactoring required (simpler solution)
+
+**Lessons Learned:**
+- Environment differences (local vs cloud) are common root causes
+- Timezone issues manifest as time-based logic errors
+- Server configuration can solve issues without code changes
+- Understanding deployment platforms (AWS EB .ebextensions) enables infrastructure fixes
+
+**Pattern for Future Debugging:**
+```
+When user reports: "works on X, broken on Y"
+1. Ask: What's different between environments?
+2. Check: Time, filesystem, networking, resources
+3. Trace: How does the feature use that environmental difference?
+4. Offer: Multiple solution approaches (code vs config)
+5. Document: Root cause and prevention strategy
+```
+
+---
+
+## Documentation Generation
+
+### Prompt: Comprehensive Development History Documentation
+
+**Effectiveness:** ⭐⭐⭐⭐⭐ (5/5)
+
+**Context:**
+User provided AiDD project brief PDF with requirement:
+```
+"8. Documentation & Local Runbook
+- dev_notes.md: Log all AI interactions, decisions, and iterations
+- Include AI contribution percentage
+- Document ethical AI usage
+- Track all prompts and outcomes"
+```
+
+**User's Request:**
+```
+"do all of this in thorough detail"
+```
+
+**Why It Worked:**
+- Clear deliverable specified: dev_notes.md
+- Academic context: AI-first development course project
+- Requirement for transparency: "log ALL AI interactions"
+- Ethical component: must document AI contribution honestly
+- User emphasized thoroughness: "in thorough detail"
+
+**AI Approach:**
+1. Reviewed entire conversation history (12 sessions, 11/08 - 11/15)
+2. Organized chronologically by session date
+3. For each interaction, documented:
+   - User's prompt (exact wording when possible)
+   - Context that led to the prompt
+   - AI's response and implementation
+   - Files affected with line numbers
+   - Outcome and lessons learned
+4. Added comprehensive summary sections:
+   - Code attribution breakdown (85% AI, 15% human)
+   - Ethical AI usage statement
+   - Testing and validation process
+   - Development statistics
+   - Lessons learned
+   - Future enhancements
+   - Reflection on AI-first development
+
+**Result:**
+- 2,126-line comprehensive dev_notes.md
+- 40+ AI interactions documented
+- 12 development sessions with full context
+- Complete audit trail for academic integrity
+
+**Code Attribution Summary Generated:**
+```
+Total Code Attribution:
+- AI-Generated Code: ~85% (13,000+ lines)
+  - All DAL files (5,500 lines)
+  - All Model files (3,500 lines)
+  - All Controller files (2,500 lines)
+  - Most template files (1,500 lines)
+
+- Human-Written Code: ~15% (2,000+ lines)
+  - Project requirements and specifications
+  - Database schema design decisions
+  - Manual testing and debugging
+  - Configuration customization
+  - Asset creation (icons, images)
+  - Deployment package creation
+```
+
+**What Made This Excellent:**
+- Transparent about AI contribution (85% quantified)
+- Session-by-session breakdown preserves chronology
+- Included exact prompts where possible (reproducibility)
+- Documented failures and iterations (not just successes)
+- Addressed ethical AI usage explicitly
+- Provided reflection on AI-first development paradigm
+- Formatted for team collaboration and handoff
+
+**Template for Documentation Generation:**
+```
+Create [DOCUMENTATION_FILE] documenting:
+1. Full history of [SCOPE] with timestamps
+2. For each interaction:
+   - User prompt (exact)
+   - AI response summary
+   - Code changes (files and line numbers)
+   - Outcome and lessons
+3. Summary sections:
+   - [Metric 1]: quantified
+   - [Metric 2]: assessment
+   - Lessons learned
+   - Future recommendations
+4. Format for [AUDIENCE]
+
+Be thorough and transparent. Include both successes and failures.
+```
+
+**Academic Integrity Best Practice:**
+This prompt demonstrates proper AI usage documentation:
+- Quantifies AI contribution percentage
+- Lists specific AI-generated components
+- Acknowledges human contributions
+- Provides audit trail for verification
+- Enables proper citation in academic work
+
+---
+
+## Updated Anti-Patterns
+
+### ❌ Deployment Package Without Verification
+
+**What Happened:**
+Created deployment zip with 34MB size (should be 13MB), included unnecessary .git directory and temp folders.
+
+**Why It Failed:**
+- Didn't verify file size against expected baseline
+- Didn't exclude common non-deployable files (.git, temp dirs)
+- Didn't check contents before providing to user
+
+**Lesson:**
+Always verify deployment artifacts against requirements:
+```
+After creating deployment package:
+1. Check file size against baseline
+2. List contents to verify structure
+3. Confirm exclusions (check for .git, __pycache__, .DS_Store)
+4. Test in target environment if possible
+```
+
+---
+
+## Prompt Engineering Principles (Updated)
+
+### 11. **Quantify Requirements for Transparency**
+- Academic/professional contexts need metrics
+- "What percentage AI-generated?" requires code attribution
+- "Log all interactions" means comprehensive, not selective
+- Transparency builds trust and enables audit
+
+### 12. **Root Cause Analysis Over Quick Fixes**
+- "Works here, broken there" → investigate environment differences
+- Explain the mechanism, not just the fix
+- Offer multiple approaches with trade-offs
+- User-selected solutions have better buy-in
+
+### 13. **Documentation as First-Class Deliverable**
+- Documentation prompts need same rigor as code prompts
+- Specify audience: academic, team, future developers
+- Include both successes and failures
+- Chronological organization preserves context
+
+---
+
+## New Template: Environment-Specific Debugging
+
+```
+Debug: [FEATURE] works in [ENV_A] but fails in [ENV_B]
+
+Investigation steps:
+1. Identify environmental differences (time, filesystem, resources, network)
+2. Trace feature logic through differences
+3. Reproduce issue hypothesis locally if possible
+4. Propose solutions:
+   - Code fix (portable across environments)
+   - Config fix (adjust environment to match)
+5. User selects approach based on trade-offs
+
+Document:
+- Root cause mechanism
+- Why it worked in ENV_A
+- Why it failed in ENV_B
+- Solution rationale
+- Prevention strategy
+```
+
+**Example:**
+```
+Debug: Booking auto-completion works on localhost but fails on AWS
+
+Investigation:
+1. Environment difference: Localhost = EST, AWS = UTC (default)
+2. Feature logic: datetime.now() < booking.end_datetime
+3. Hypothesis: UTC time 5 hours ahead → premature completion
+4. Solutions:
+   - Code: Store UTC, display local (refactor DAL + templates)
+   - Config: Set AWS timezone to EST (.ebextensions file)
+5. User selected: Config (simpler, no breaking changes)
+
+Mechanism: datetime.now() returns system local time.
+Prevention: Document timezone assumptions in config/README.
+```
+
+---
+
+**Last Updated:** 2025-11-15
+**Total Golden Prompts Documented:** 11
+**Success Rate:** 10/11 excellent (91%), 1/11 very good (9%)
+
+**Remaining Documentation Tasks:**
+- README.md: Add AI-first folder structure documentation
+- API.md: Create endpoint documentation (85+ routes)
+- Test documentation: pytest instructions

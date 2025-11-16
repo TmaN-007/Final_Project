@@ -292,6 +292,28 @@ def api_threads():
     })
 
 
+@message_bp.route('/api/unread_count')
+@login_required
+def api_unread_count():
+    """
+    API endpoint to get total unread message count for current user.
+    Used for auto-updating notification badge.
+    Optionally excludes a specific thread (e.g., the currently active thread).
+    """
+    exclude_thread_id = request.args.get('exclude_thread_id', type=int)
+
+    threads = MessageDAL.get_threads_by_user(current_user.user_id)
+    total_unread = sum(
+        t.get('unread_count', 0)
+        for t in threads
+        if not exclude_thread_id or t['thread_id'] != exclude_thread_id
+    )
+
+    return jsonify({
+        'unread_count': total_unread
+    })
+
+
 @message_bp.route('/api/thread/<int:thread_id>/messages')
 @login_required
 def api_messages(thread_id):

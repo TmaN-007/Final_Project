@@ -131,15 +131,19 @@
                     <a href="{{ url_for('message.inbox') }}" class="nav-link {% if request.endpoint and request.endpoint.startswith('message.') %}active{% endif %}" style="position: relative;">
                         Messages
                         {% if unread_messages > 0 %}
-                            <span class="notification-badge">{{ unread_messages if unread_messages < 100 else '99+' }}</span>
+                            <span class="notification-badge" id="message-badge">{{ unread_messages if unread_messages < 100 else '99+' }}</span>
+                        {% else %}
+                            <span class="notification-badge" id="message-badge" style="display: none;"></span>
                         {% endif %}
                     </a>
                     <!-- Debug: User Role = {{ current_user.role }} -->
                     {% if current_user.role in ['staff', 'admin'] %}
                         <a href="{{ url_for('booking.pending_approvals') }}" class="nav-link {% if request.endpoint == 'booking.pending_approvals' %}active{% endif %}" style="position: relative;">
                             Approvals
-                            {% if pending_approvals > 0 %}
-                                <span class="notification-badge">{{ pending_approvals if pending_approvals < 100 else '99+' }}</span>
+                            {% if pending_approvals and pending_approvals > 0 %}
+                                <span id="approvals-badge" class="notification-badge">{{ pending_approvals if pending_approvals < 100 else '99+' }}</span>
+                            {% else %}
+                                <span id="approvals-badge" class="notification-badge" style="display: none;"></span>
                             {% endif %}
                         </a>
                     {% endif %}
@@ -291,6 +295,98 @@
         });
     });
     </script>
+
+    <!-- Auto-Update Message Notifications -->
+    {% if current_user.is_authenticated %}
+    <script>
+    (function() {
+        // Function to update the message badge (exposed globally for override)
+        window.updateMessageBadge = function() {
+            fetch('{{ url_for("message.api_unread_count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('message-badge');
+                    if (badge) {
+                        const unreadCount = data.unread_count;
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount < 100 ? unreadCount : '99+';
+                            badge.style.display = '';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching unread message count:', error);
+                });
+        };
+
+        // Wait for DOM to be fully loaded before calling
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.updateMessageBadge);
+        } else {
+            // DOM already loaded, call immediately
+            window.updateMessageBadge();
+        }
+
+        // Update badge every 30 seconds
+        setInterval(window.updateMessageBadge, 30000);
+
+        // Also update when page becomes visible (user switches back to tab)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                window.updateMessageBadge();
+            }
+        });
+    })();
+    </script>
+
+    <!-- Auto-Update Approvals Badge -->
+    {% if current_user.role in ['staff', 'admin'] %}
+    <script>
+    (function() {
+        // Function to update the approvals badge
+        window.updateApprovalsBadge = function() {
+            fetch('{{ url_for("booking.api_pending_approvals_count") }}')
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('approvals-badge');
+                    if (badge) {
+                        const pendingCount = data.pending_count;
+                        if (pendingCount > 0) {
+                            badge.textContent = pendingCount < 100 ? pendingCount : '99+';
+                            badge.style.display = '';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching pending approvals count:', error);
+                });
+        };
+
+        // Wait for DOM to be fully loaded before calling
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', window.updateApprovalsBadge);
+        } else {
+            // DOM already loaded, call immediately
+            window.updateApprovalsBadge();
+        }
+
+        // Update badge every 30 seconds
+        setInterval(window.updateApprovalsBadge, 30000);
+
+        // Also update when page becomes visible (user switches back to tab)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                window.updateApprovalsBadge();
+            }
+        });
+    })();
+    </script>
+    {% endif %}
+    {% endif %}
 
     <!-- Additional page-specific scripts -->
     {% block scripts %}{% endblock %}

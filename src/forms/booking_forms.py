@@ -8,6 +8,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, DateTimeField, HiddenField, SelectField, SubmitField
 from wtforms.validators import DataRequired, Optional, Length, ValidationError
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+import time
 
 
 class BookingForm(FlaskForm):
@@ -57,6 +59,26 @@ class BookingForm(FlaskForm):
         # Check if booking is too far in the future (e.g., max 6 months)
         if field.data and field.data > datetime.now() + timedelta(days=180):
             raise ValidationError('Cannot create bookings more than 6 months in advance')
+
+    def get_utc_datetimes(self):
+        """
+        Convert the naive local datetimes to UTC-aware datetimes.
+
+        Returns:
+            tuple: (start_datetime_utc, end_datetime_utc) as timezone-aware datetime objects
+        """
+        # Get system's local timezone
+        local_tz = ZoneInfo(time.tzname[time.daylight])
+
+        # Treat the naive datetime as local time
+        start_local = self.start_datetime.data.replace(tzinfo=local_tz)
+        end_local = self.end_datetime.data.replace(tzinfo=local_tz)
+
+        # Convert to UTC
+        start_utc = start_local.astimezone(ZoneInfo('UTC'))
+        end_utc = end_local.astimezone(ZoneInfo('UTC'))
+
+        return (start_utc, end_utc)
 
 
 class BookingApprovalForm(FlaskForm):

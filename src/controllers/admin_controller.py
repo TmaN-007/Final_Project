@@ -458,27 +458,40 @@ def cancel_booking(booking_id):
     Cancel a booking (admin override).
     """
     try:
-        reason = request.form.get('reason', 'Cancelled by administrator')
-
         booking = BookingDAL.get_booking_by_id(booking_id)
         if not booking:
-            return jsonify({'success': False, 'message': 'Booking not found.'}), 404
+            flash('Booking not found.', 'danger')
+            return redirect(url_for('admin.bookings'))
 
         if booking['status'] == 'cancelled':
-            return jsonify({'success': False, 'message': 'Booking is already cancelled.'}), 400
+            flash('Booking is already cancelled.', 'warning')
+            return redirect(url_for('admin.bookings'))
 
-        BookingDAL.cancel_booking(booking_id, reason)
+        if booking['status'] == 'completed':
+            flash('Cannot cancel a completed booking.', 'warning')
+            return redirect(url_for('admin.bookings'))
 
-        logger.info(f"Admin {current_user.email} cancelled booking {booking_id}: {reason}")
+        # Cancel the booking
+        BookingDAL.cancel_booking(booking_id)
 
-        return jsonify({
-            'success': True,
-            'message': 'Booking cancelled successfully.'
-        })
+        # Send system notification to the user
+        try:
+            system_messaging.notify_booking_cancelled_by_admin(
+                user_id=booking['requester_id'],
+                booking_id=booking_id,
+                resource_title=booking.get('resource_title', 'Resource')
+            )
+        except Exception as e:
+            logger.error(f"Failed to send cancellation notification: {e}")
+
+        logger.info(f"Admin {current_user.email} cancelled booking {booking_id}")
+        flash('Booking cancelled successfully.', 'success')
+        return redirect(url_for('admin.bookings'))
 
     except Exception as e:
         logger.error(f"Error cancelling booking: {str(e)}", exc_info=True)
-        return jsonify({'success': False, 'message': 'Error cancelling booking.'}), 500
+        flash('Error cancelling booking.', 'danger')
+        return redirect(url_for('admin.bookings'))
 
 
 # =============================================================================

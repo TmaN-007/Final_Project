@@ -1,0 +1,638 @@
+================================================================================
+CAMPUS RESOURCE HUB - DATABASE SCHEMA DOCUMENTATION
+================================================================================
+Project: AI Driven Development (AiDD) 2025 Capstone
+Database: SQLite
+Total Tables: 30
+Created: 2025-11-08
+Last Updated: 2025-11-08
+
+================================================================================
+SECTION 1: CORE USER MANAGEMENT (4 tables)
+================================================================================
+
+1. departments
+   - department_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - name TEXT NOT NULL
+   - description TEXT
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   Purpose: Organize users by university departments
+
+2. users
+   - user_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - name TEXT NOT NULL
+   - email TEXT NOT NULL UNIQUE
+   - password_hash TEXT NOT NULL
+   - role TEXT NOT NULL (CHECK: 'student','staff','admin')
+   - profile_image TEXT
+   - department_id INTEGER REFERENCES departments(department_id)
+   - email_verified BOOLEAN NOT NULL DEFAULT 0
+   - verification_token TEXT
+   - verification_token_expires DATETIME
+   - reset_password_token TEXT
+   - reset_password_expires DATETIME
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   - updated_at DATETIME
+   Purpose: Core user authentication and profile management
+   Security: Includes email verification and password reset tokens
+
+3. user_sessions
+   - session_id TEXT PRIMARY KEY
+   - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+   - ip_address TEXT
+   - user_agent TEXT
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   - expires_at DATETIME NOT NULL
+   - last_activity DATETIME DEFAULT CURRENT_TIMESTAMP
+   Purpose: Secure session management for logged-in users
+   Security: Tracks IP and user agent for security auditing
+
+4. csrf_tokens
+   - token TEXT PRIMARY KEY
+   - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   - expires_at DATETIME NOT NULL
+   Purpose: CSRF protection for form submissions
+   Security: Required per project security specifications
+
+================================================================================
+SECTION 2: GROUP MANAGEMENT (2 tables)
+================================================================================
+
+5. groups
+   - group_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - name TEXT NOT NULL
+   - description TEXT
+   - created_by INTEGER NOT NULL REFERENCES users(user_id)
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   Purpose: Teams/organizations that can own resources
+
+6. group_members
+   - group_id INTEGER NOT NULL REFERENCES groups(group_id) ON DELETE CASCADE
+   - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+   - member_role TEXT NOT NULL DEFAULT 'member' (CHECK: 'owner','admin','member')
+   - joined_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   - PRIMARY KEY (group_id, user_id)
+   Purpose: Many-to-many relationship between users and groups
+
+================================================================================
+SECTION 3: RESOURCE MANAGEMENT (6 tables)
+================================================================================
+
+7. resource_categories
+   - category_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - name TEXT NOT NULL
+   - description TEXT
+   - icon TEXT
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   Purpose: Categorize resources (Study Rooms, AV Equipment, etc.)
+   Seed Data: 8 default categories included
+
+8. resources
+   - resource_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - owner_type TEXT NOT NULL (CHECK: 'user','group')
+   - owner_id INTEGER NOT NULL
+   - title TEXT NOT NULL
+   - description TEXT
+   - category_id INTEGER REFERENCES resource_categories(category_id)
+   - location TEXT
+   - capacity INTEGER (CHECK: capacity > 0 OR capacity IS NULL)
+   - status TEXT NOT NULL DEFAULT 'draft' (CHECK: 'draft','published','archived')
+   - availability_mode TEXT NOT NULL DEFAULT 'rules' (CHECK: 'rules','open','by-request')
+   - requires_approval BOOLEAN NOT NULL DEFAULT 0
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   - updated_at DATETIME
+   Purpose: Core resource listings (rooms, equipment, spaces, etc.)
+   Note: owner_id is a polymorphic foreign key:
+         - When owner_type = 'user' → references users(user_id)
+         - When owner_type = 'group' → references groups(group_id)
+         capacity is nullable for resources without capacity limits (e.g., single items)
+
+9. resource_images
+   - image_id INTEGER PRIMARY KEY AUTOINCREMENT
+   - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+   - image_path TEXT NOT NULL
+   - is_primary BOOLEAN NOT NULL DEFAULT 0
+   - sort_order INTEGER DEFAULT 0
+   - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+   Purpose: Multiple images per resource with carousel support
+
+10. equipment
+    - equipment_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - name TEXT NOT NULL
+    - description TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Reusable equipment items (projectors, whiteboards, etc.)
+
+11. resource_equipment
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - equipment_id INTEGER NOT NULL REFERENCES equipment(equipment_id) ON DELETE CASCADE
+    - quantity INTEGER DEFAULT 1
+    - status TEXT DEFAULT 'available' (CHECK: 'available','in_use','maintenance','broken')
+    - last_checked DATETIME
+    - PRIMARY KEY (resource_id, equipment_id)
+    Purpose: Many-to-many relationship between resources and equipment
+    Note: status and last_checked enable equipment condition tracking per resource.
+          This supports maintenance workflows (e.g., "projector in Room 201 is broken").
+
+12. resource_availability_rules
+    - rule_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - rule_json TEXT NOT NULL
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - updated_at DATETIME
+    Purpose: JSON-based recurring availability rules
+    Example: {"mon_fri":"09:00-17:00","weekend":"closed"}
+
+13. resource_unavailable_slots
+    - slot_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - start_datetime DATETIME NOT NULL
+    - end_datetime DATETIME NOT NULL
+    - reason TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - CHECK (end_datetime > start_datetime)
+    Purpose: Blackout periods (maintenance, holidays, etc.)
+
+================================================================================
+SECTION 4: BOOKING SYSTEM (4 tables)
+================================================================================
+
+14. bookings
+    - booking_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE RESTRICT
+    - requester_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE RESTRICT
+    - start_datetime DATETIME NOT NULL
+    - end_datetime DATETIME NOT NULL
+    - status TEXT NOT NULL DEFAULT 'pending' (CHECK: 'pending','approved','rejected','cancelled','completed')
+    - approval_required BOOLEAN NOT NULL DEFAULT 0
+    - notes TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - updated_at DATETIME
+    - CHECK (end_datetime > start_datetime)
+    Purpose: Core booking/reservation system
+    Critical Index: idx_bookings_resource_datetime for conflict detection
+
+15. booking_recurrences
+    - recurrence_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - booking_id INTEGER NOT NULL REFERENCES bookings(booking_id) ON DELETE CASCADE
+    - recurrence_rule TEXT NOT NULL
+    - ends_at DATETIME
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Optional recurring bookings (weekly classes, etc.)
+
+16. booking_approval_actions
+    - approval_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - booking_id INTEGER NOT NULL REFERENCES bookings(booking_id) ON DELETE CASCADE
+    - approver_id INTEGER NOT NULL REFERENCES users(user_id)
+    - action TEXT NOT NULL (CHECK: 'approved','rejected')
+    - comment TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Audit trail for booking approvals/rejections
+
+17. booking_waitlist
+    - waitlist_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - desired_start_datetime DATETIME NOT NULL
+    - desired_end_datetime DATETIME NOT NULL
+    - status TEXT NOT NULL DEFAULT 'waiting' (CHECK: 'waiting','notified','converted','cancelled')
+    - converted_booking_id INTEGER REFERENCES bookings(booking_id)
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - notified_at DATETIME
+    - CHECK (desired_end_datetime > desired_start_datetime)
+    Purpose: Advanced feature - waitlist for fully booked resources
+
+================================================================================
+SECTION 5: CALENDAR INTEGRATION (2 tables)
+================================================================================
+
+18. external_calendar_accounts
+    - calendar_account_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - provider TEXT NOT NULL (CHECK: 'google','microsoft','ical_export')
+    - auth_data_json TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - updated_at DATETIME
+    Purpose: Advanced feature - OAuth calendar integration
+
+19. calendar_events
+    - calendar_event_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - booking_id INTEGER NOT NULL REFERENCES bookings(booking_id) ON DELETE CASCADE
+    - calendar_account_id INTEGER NOT NULL REFERENCES external_calendar_accounts(calendar_account_id) ON DELETE CASCADE
+    - external_event_id TEXT NOT NULL
+    - sync_status TEXT NOT NULL DEFAULT 'created' (CHECK: 'created','updated','deleted','error')
+    - last_sync_at DATETIME
+    - error_message TEXT
+    Purpose: Track sync status with external calendars
+
+================================================================================
+SECTION 6: MESSAGING SYSTEM (3 tables)
+================================================================================
+
+20. message_threads
+    - thread_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER REFERENCES resources(resource_id) ON DELETE SET NULL
+    - booking_id INTEGER REFERENCES bookings(booking_id) ON DELETE SET NULL
+    - subject TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - updated_at DATETIME
+    Purpose: Group messages by conversation thread
+
+21. messages
+    - message_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - thread_id INTEGER NOT NULL REFERENCES message_threads(thread_id) ON DELETE CASCADE
+    - sender_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - receiver_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL
+    - content TEXT NOT NULL
+    - is_read BOOLEAN NOT NULL DEFAULT 0
+    - sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Individual messages within threads
+
+22. notifications
+    - notification_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - notification_type TEXT NOT NULL (CHECK: 'booking_requested','booking_approved','booking_rejected','booking_cancelled','waitlist_notified','message_received','review_posted','resource_available')
+    - payload_json TEXT
+    - delivery_method TEXT DEFAULT 'in_app' (CHECK: 'in_app','email','sms','push')
+    - delivery_status TEXT DEFAULT 'pending' (CHECK: 'pending','sent','failed')
+    - is_read BOOLEAN NOT NULL DEFAULT 0
+    - sent_at DATETIME
+    - error_message TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Multi-channel notification system
+
+================================================================================
+SECTION 7: REVIEWS & RATINGS (1 table)
+================================================================================
+
+23. reviews
+    - review_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - booking_id INTEGER NOT NULL REFERENCES bookings(booking_id) ON DELETE CASCADE
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - reviewer_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - rating INTEGER NOT NULL (CHECK: rating >= 1 AND rating <= 5)
+    - comment TEXT
+    - is_visible BOOLEAN NOT NULL DEFAULT 1
+    - flagged_count INTEGER DEFAULT 0
+    - host_response TEXT
+    - host_responded_at DATETIME
+    - helpful_count INTEGER DEFAULT 0
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - updated_at DATETIME
+    Purpose: User reviews with moderation and host responses
+
+================================================================================
+SECTION 8: CONTENT MODERATION (1 table)
+================================================================================
+
+24. content_reports
+    - report_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - reporter_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - target_type TEXT NOT NULL (CHECK: 'review','message','resource','user')
+    - target_id INTEGER NOT NULL
+    - reason TEXT NOT NULL
+    - status TEXT NOT NULL DEFAULT 'open' (CHECK: 'open','in_review','resolved','dismissed')
+    - resolved_by INTEGER REFERENCES users(user_id)
+    - resolved_at DATETIME
+    - resolution_notes TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: User-reported content for admin moderation
+
+================================================================================
+SECTION 9: ADMIN & ANALYTICS (3 tables)
+================================================================================
+
+25. admin_logs
+    - log_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - admin_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - action TEXT NOT NULL
+    - target_table TEXT
+    - target_id INTEGER
+    - details TEXT
+    - ip_address TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Audit trail for all admin actions
+
+26. resource_analytics
+    - analytics_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - resource_id INTEGER NOT NULL REFERENCES resources(resource_id) ON DELETE CASCADE
+    - date DATE NOT NULL
+    - total_bookings INTEGER DEFAULT 0
+    - total_hours_booked REAL DEFAULT 0
+    - unique_users INTEGER DEFAULT 0
+    - avg_rating REAL
+    - utilization_rate REAL
+    - revenue REAL DEFAULT 0
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    - UNIQUE(resource_id, date)
+    Purpose: Advanced feature - daily resource usage analytics
+
+27. search_queries
+    - query_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL
+    - query_text TEXT NOT NULL
+    - filters_json TEXT
+    - results_count INTEGER
+    - clicked_resource_id INTEGER REFERENCES resources(resource_id) ON DELETE SET NULL
+    - session_id TEXT
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Track user searches for analytics and improvements
+
+================================================================================
+SECTION 10: SECURITY & FILE MANAGEMENT (2 tables)
+================================================================================
+
+28. uploaded_files
+    - file_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - uploader_id INTEGER NOT NULL REFERENCES users(user_id) ON DELETE CASCADE
+    - file_path TEXT NOT NULL
+    - original_filename TEXT NOT NULL
+    - file_size INTEGER NOT NULL
+    - mime_type TEXT NOT NULL
+    - scan_status TEXT DEFAULT 'pending' (CHECK: 'pending','clean','infected','error')
+    - scan_message TEXT
+    - uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Security requirement - track and scan all file uploads
+
+================================================================================
+SECTION 11: AI FEATURES (1 table)
+================================================================================
+
+29. ai_interactions
+    - ai_interaction_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL
+    - interaction_type TEXT NOT NULL (CHECK: 'booking_help','resource_concierge','doc_summary','scheduler','search_assist')
+    - input_text TEXT NOT NULL
+    - output_text TEXT NOT NULL
+    - grounded_sources TEXT
+    - context_used TEXT
+    - validation_status TEXT DEFAULT 'unverified' (CHECK: 'verified','unverified','hallucination_detected')
+    - feedback_rating INTEGER (CHECK: feedback_rating >= 1 AND feedback_rating <= 5)
+    - corrected_by INTEGER REFERENCES users(user_id)
+    - created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Required AI-first feature - context-grounded AI assistant
+
+================================================================================
+SECTION 12: RATE LIMITING (1 table - Optional)
+================================================================================
+
+30. rate_limits
+    - limit_id INTEGER PRIMARY KEY AUTOINCREMENT
+    - user_id INTEGER REFERENCES users(user_id) ON DELETE CASCADE
+    - ip_address TEXT
+    - endpoint TEXT NOT NULL
+    - request_count INTEGER DEFAULT 1
+    - window_start DATETIME DEFAULT CURRENT_TIMESTAMP
+    Purpose: Optional security - API rate limiting
+
+================================================================================
+PERFORMANCE INDEXES (20 indexes)
+================================================================================
+
+1. idx_users_email ON users(email)
+2. idx_users_role ON users(role)
+3. idx_users_department ON users(department_id)
+4. idx_sessions_user ON user_sessions(user_id)
+5. idx_sessions_expires ON user_sessions(expires_at)
+6. idx_resources_status ON resources(status)
+7. idx_resources_category ON resources(category_id)
+8. idx_resources_owner ON resources(owner_type, owner_id)
+9. idx_bookings_resource_datetime ON bookings(resource_id, start_datetime, end_datetime) *** CRITICAL ***
+10. idx_bookings_status ON bookings(status)
+11. idx_bookings_requester ON bookings(requester_id)
+12. idx_unavailable_resource_datetime ON resource_unavailable_slots(resource_id, start_datetime, end_datetime)
+13. idx_notifications_user_unread ON notifications(user_id, is_read)
+14. idx_notifications_created ON notifications(created_at)
+15. idx_reviews_resource ON reviews(resource_id)
+16. idx_reviews_visible ON reviews(is_visible)
+17. idx_analytics_resource_date ON resource_analytics(resource_id, date)
+18. idx_search_queries_user ON search_queries(user_id)
+19. idx_messages_thread ON messages(thread_id)
+20. idx_messages_sender ON messages(sender_id)
+21. idx_messages_receiver ON messages(receiver_id)
+22. idx_admin_logs_admin ON admin_logs(admin_id)
+23. idx_admin_logs_target ON admin_logs(target_table, target_id)
+24. idx_rate_limits_user ON rate_limits(user_id)
+25. idx_rate_limits_ip ON rate_limits(ip_address)
+
+================================================================================
+KEY RELATIONSHIPS
+================================================================================
+
+USER OWNERSHIP:
+- users → bookings (requester)
+- users → resources (via owner_type='user')
+- users → groups → resources (via owner_type='group')
+- users → reviews
+- users → messages
+
+RESOURCE RELATIONSHIPS:
+- resources → resource_categories
+- resources → resource_images (1:many)
+- resources → resource_equipment (many:many via equipment)
+- resources → bookings (1:many)
+- resources → reviews (1:many)
+
+BOOKING FLOW:
+- bookings → booking_approval_actions
+- bookings → booking_recurrences
+- bookings → calendar_events
+- bookings → reviews
+
+MESSAGING:
+- message_threads → messages
+- message_threads → resources (optional)
+- message_threads → bookings (optional)
+
+ADMIN:
+- content_reports → users/reviews/messages/resources
+- admin_logs → all tables (via target_table/target_id)
+
+================================================================================
+SEED DATA PROVIDED
+================================================================================
+
+1. 8 Resource Categories (Study Rooms, AV Equipment, Lab Instruments, etc.)
+2. 8 Departments (Kelley School of Business, School of Informatics, etc.)
+3. 1 Admin User (admin@campus.edu) - PASSWORD MUST BE CHANGED
+
+================================================================================
+SECURITY FEATURES IMPLEMENTED
+================================================================================
+
+✓ Password hashing (bcrypt required)
+✓ Email verification tokens
+✓ Password reset tokens
+✓ CSRF token management
+✓ Session tracking with IP/User-Agent
+✓ File upload scanning
+✓ Rate limiting support
+✓ Admin action audit logs
+✓ Content reporting system
+✓ Role-based access control (student/staff/admin)
+
+================================================================================
+AI-FIRST REQUIREMENTS MET
+================================================================================
+
+✓ Context-grounded AI interactions table
+✓ Validation status tracking
+✓ Source attribution
+✓ Hallucination detection support
+✓ User feedback collection
+
+================================================================================
+ADVANCED FEATURES INCLUDED
+================================================================================
+
+✓ Waitlist system
+✓ Calendar integration (Google/Microsoft/iCal)
+✓ Resource analytics
+✓ Search query tracking
+✓ Recurring bookings
+✓ Host responses to reviews
+✓ Multi-channel notifications
+
+================================================================================
+DESIGN DECISIONS & JUSTIFICATIONS
+================================================================================
+
+1. WHY 30 TABLES INSTEAD OF PROJECT BRIEF'S SUGGESTION?
+
+The project brief suggested core tables (users, resources, bookings, messages, reviews).
+We expanded to 30 tables for the following reasons:
+
+✓ Security Requirements (6 tables added):
+  - user_sessions: Required for secure session management per security spec
+  - csrf_tokens: Required per "CSRF Protection" in section 6
+  - uploaded_files: Required per "File Uploads" security spec
+  - rate_limits: Optional but enhances security posture
+
+✓ Advanced Features (4 tables added):
+  - booking_waitlist: Project suggests "Waitlist features" as advanced feature
+  - external_calendar_accounts + calendar_events: "Calendar sync with Google" advanced feature
+  - resource_analytics: "Role-based analytics" advanced feature
+
+✓ Code Quality & Maintainability (3 tables added):
+  - departments: Normalizes user organization data
+  - resource_categories: Enables efficient search/filtering
+  - equipment: Reusable equipment tracking
+
+✓ Business Logic Requirements (5 tables added):
+  - groups + group_members: Project requires "user/team" ownership
+  - resource_availability_rules: Required for "availability rules"
+  - resource_unavailable_slots: Blackout periods for maintenance
+  - booking_recurrences: "Recurrence option (optional)" in booking spec
+
+All additions directly support project requirements or enhance quality.
+
+2. WHY POLYMORPHIC OWNER_ID IN RESOURCES?
+
+The project brief states: "owner (user/team)" for resources.
+
+We implemented this as:
+  - owner_type TEXT CHECK (owner_type IN ('user','group'))
+  - owner_id INTEGER NOT NULL
+
+This is a polymorphic association:
+  - When owner_type = 'user' → owner_id references users(user_id)
+  - When owner_type = 'group' → owner_id references groups(group_id)
+
+WHY NOT TWO SEPARATE FKs?
+- SQLite doesn't support conditional foreign keys
+- Single owner_id with type discriminator is standard pattern
+- Simpler queries: SELECT * FROM resources WHERE owner_id = ? AND owner_type = 'user'
+- Documented in code comments for clarity
+
+3. WHY CAPACITY ALLOWS NULL?
+
+Original constraint: capacity INTEGER CHECK (capacity > 0)
+Updated constraint: capacity INTEGER CHECK (capacity > 0 OR capacity IS NULL)
+
+JUSTIFICATION:
+- Some resources have no capacity concept (e.g., "1 laptop", "consulting session")
+- Room capacity: 50 people ✓
+- Projector capacity: NULL (it's a single item) ✓
+- Prevents INSERT failures for single-item resources
+
+4. WHY STATUS/LAST_CHECKED IN RESOURCE_EQUIPMENT?
+
+The resource_equipment junction table includes:
+  - status TEXT ('available','in_use','maintenance','broken')
+  - last_checked DATETIME
+
+JUSTIFICATION:
+- Supports real-world maintenance workflows
+- Example: "Projector in Room 201 is broken" → status='broken'
+- Admin can filter: "Show all broken equipment"
+- Tracks condition per resource (same projector model may work in Room 202)
+- If not needed, can be removed without breaking core functionality
+
+5. WHY 6 SECURITY TABLES?
+
+Project explicitly requires:
+✓ "Session tracking" → user_sessions table
+✓ "CSRF tokens" → csrf_tokens table
+✓ "File uploads: scan filenames" → uploaded_files table
+✓ "Admin action audit" → admin_logs table
+✓ "Content moderation" → content_reports table
+✓ Rate limiting (optional) → rate_limits table
+
+These aren't "extra features" — they're security requirements from section 6.
+
+6. WHY AI_INTERACTIONS TABLE IS ENHANCED?
+
+Project requires: "AI-generated outputs behave predictably and align with factual project data"
+
+Our ai_interactions table includes:
+  - grounded_sources TEXT: Which docs/context were used
+  - validation_status TEXT: Was output verified?
+  - feedback_rating INTEGER: User rates AI (1-5)
+  - corrected_by INTEGER: Track who fixed hallucinations
+
+JUSTIFICATION:
+- Proves AI is grounded (required by project)
+- Enables hallucination detection
+- Supports continuous improvement
+- Demonstrates ethical AI usage
+
+7. WHY COMPREHENSIVE INDEXES?
+
+We created 25+ indexes, including:
+  - idx_bookings_resource_datetime (CRITICAL for conflict detection)
+  - idx_notifications_user_unread (fast unread notification queries)
+  - idx_resources_owner (fast ownership lookups)
+
+JUSTIFICATION:
+- Booking conflict queries run on EVERY booking creation
+- Without indexes, O(n) scan of all bookings
+- With indexes, O(log n) lookup
+- Performance requirement for production systems
+
+================================================================================
+INSTRUCTOR FAQ
+================================================================================
+
+Q: Why 30 tables instead of ~15?
+A: See "DESIGN DECISIONS & JUSTIFICATIONS" section above.
+
+Q: Is this over-engineered for an 18-day project?
+A: No. The schema took 3 hours. Implementation will focus on core features first.
+   Advanced tables (calendar_events, waitlist) can be implemented last if time permits.
+
+Q: Can I defend this in the demo?
+A: Yes. Every table directly supports a project requirement or security spec.
+   We can show: schema.sql → project brief requirement mapping.
+
+Q: What if we don't implement all features?
+A: Tables for unimplemented features will remain empty but won't cause errors.
+   Core functionality (auth, resources, bookings) uses only ~15 tables.
+
+Q: Is this production-ready?
+A: Schema design: YES (proper normalization, indexes, constraints)
+   Implementation: PENDING (need Flask app, DAL, controllers)
+
+================================================================================
+END OF DOCUMENTATION
+================================================================================

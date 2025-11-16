@@ -841,5 +841,92 @@ setInterval(function() {
         .catch(error => console.log('Failed to check for new messages:', error));
 }, 3000);
 {% endif %}
+
+// Auto-refresh thread list every 10 seconds to show new messages from others
+setInterval(function() {
+    fetch('{{ url_for("message.api_threads") }}')
+        .then(response => response.json())
+        .then(data => {
+            const threadList = document.querySelector('.thread-list');
+            if (!threadList) return;
+
+            const activeThreadId = {{ active_thread.thread_id if active_thread else 'null' }};
+
+            // Rebuild thread list HTML
+            let threadsHTML = '';
+            data.threads.forEach(thread => {
+                const isActive = thread.thread_id === activeThreadId;
+                const hasUnread = thread.unread_count > 0;
+                const activeClass = isActive ? 'active' : '';
+                const unreadClass = hasUnread && !isActive ? 'unread' : '';
+
+                // Get first letter for avatar
+                const firstLetter = thread.subject ? thread.subject.charAt(0).toUpperCase() : 'T';
+
+                // Format last message time
+                const lastMessageTime = thread.last_message_at ?
+                    new Date(thread.last_message_at.replace(' ', 'T') + 'Z').toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                        hour12: true
+                    }) : '';
+
+                threadsHTML += `
+                    <a href="{{ url_for('message.inbox') }}?thread_id=${thread.thread_id}" class="thread-item ${activeClass} ${unreadClass}">
+                        <div class="thread-avatar">${firstLetter}</div>
+                        <div class="thread-info">
+                            <div class="thread-header">
+                                <div class="thread-title">${escapeHtml(thread.subject || 'No Subject')}</div>
+                                <div class="thread-time">${lastMessageTime}</div>
+                            </div>
+                            <div class="thread-preview">
+                                ${thread.resource_title ? escapeHtml(thread.resource_title) : 'Message thread'}
+                            </div>
+                        </div>
+                        ${hasUnread ? `<span class="thread-unread-badge">${thread.unread_count}</span>` : ''}
+                    </a>
+                `;
+            });
+
+            threadList.innerHTML = threadsHTML;
+        })
+        .catch(error => console.log('Failed to refresh thread list:', error));
+}, 10000);
+
+// Override the global updateMessageBadge function to exclude the active thread
+(function() {
+    const activeThreadId = {{ active_thread.thread_id if active_thread else 'null' }};
+
+    if (activeThreadId && window.updateMessageBadge) {
+        // Store reference to original function
+        const originalUpdate = window.updateMessageBadge;
+
+        // Replace with version that excludes active thread
+        window.updateMessageBadge = function() {
+            fetch('{{ url_for("message.api_unread_count") }}?exclude_thread_id=' + activeThreadId)
+                .then(response => response.json())
+                .then(data => {
+                    const badge = document.getElementById('message-badge');
+                    if (badge) {
+                        const unreadCount = data.unread_count;
+                        if (unreadCount > 0) {
+                            badge.textContent = unreadCount < 100 ? unreadCount : '99+';
+                            badge.style.display = '';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching unread message count:', error);
+                });
+        };
+
+        // Immediately update with the exclusion
+        window.updateMessageBadge();
+    }
+})();
 </script>
 {% endblock %}

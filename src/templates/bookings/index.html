@@ -375,16 +375,10 @@
 
                             <div class="booking-details">
                                 <div class="booking-detail-item">
-                                    📅 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-date-only>
-                                        {{ booking.start_datetime.strftime('%B %d, %Y') }}
-                                    </span>
+                                    📅 {{ booking.start_datetime.strftime('%B %d, %Y') }}
                                 </div>
                                 <div class="booking-detail-item">
-                                    🕐 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>
-                                        {{ booking.start_datetime.strftime('%I:%M %p') }}
-                                    </span> - <span class="utc-time" data-utc="{{ booking.end_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>
-                                        {{ booking.end_datetime.strftime('%I:%M %p') }}
-                                    </span>
+                                    🕐 {{ booking.start_datetime.strftime('%I:%M %p') }} - {{ booking.end_datetime.strftime('%I:%M %p') }}
                                 </div>
                                 <div class="booking-detail-item">
                                     ⏱️ {{ booking.get_duration_string() }}

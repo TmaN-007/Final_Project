@@ -711,3 +711,23 @@ def calendar_data(resource_id):
     except Exception as e:
         print(f"ERROR getting calendar data: {e}", file=sys.stderr, flush=True)
         return jsonify({'error': 'Internal server error'}), 500
+
+
+@booking_bp.route('/api/pending_approvals_count')
+@login_required
+def api_pending_approvals_count():
+    """
+    API endpoint to get count of pending approvals for current user.
+    Used for auto-updating notification badge.
+
+    Returns:
+        JSON: {'pending_count': int}
+    """
+    bookings_data = BookingDAL.get_pending_approvals(
+        resource_owner_id=current_user.user_id,
+        owner_type='user'
+    )
+
+    return jsonify({
+        'pending_count': len(bookings_data)
+    })

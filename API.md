@@ -851,6 +851,242 @@ curl -X GET "http://localhost:5000/resources/?search=projector&category=1" \
 
 ---
 
-**Last Updated:** 2025-11-14
+## Complete Endpoint Reference
+
+### Summary Statistics
+
+- **Total API Endpoints:** 59
+- **Public Endpoints:** 3 (no authentication required)
+- **Authenticated Endpoints:** 36 (login required)
+- **Role-Based Endpoints:** 20 (admin/staff/owner only)
+
+### Endpoint Breakdown by Controller
+
+| Controller | Endpoints | Authentication | Description |
+|-----------|-----------|----------------|-------------|
+| **Authentication** | 7 | Mixed | User registration, login, profile management |
+| **Resources** | 7 | Mixed | Resource CRUD, search, and listing |
+| **Bookings** | 11 | Required | Booking management, calendar, approvals |
+| **Messages** | 7 | Required | Messaging and thread management |
+| **Reviews** | 7 | Required | Review submission and moderation |
+| **Admin** | 20 | Admin Only | User/resource/booking/review management |
+
+### Quick Reference: All Endpoints
+
+#### Authentication Routes (`/auth/*`)
+```
+GET, POST  /auth/register                    - User registration
+GET, POST  /auth/login                       - User login
+GET        /auth/logout                      - User logout
+GET        /auth/verify-email/<token>        - Email verification (TODO)
+GET, POST  /auth/forgot-password             - Password reset request (TODO)
+GET, POST  /auth/reset-password/<token>      - Password reset form (TODO)
+GET, POST  /auth/profile/edit                - Edit user profile
+```
+
+#### Resource Routes (`/resources/*`)
+```
+GET        /resources/                       - Browse/search resources (public)
+GET        /resources/browse                 - Alias for /resources/
+GET, POST  /resources/<id>                   - View resource details / Create booking
+GET, POST  /resources/create                 - Create new resource (staff/admin)
+GET, POST  /resources/configure-availability - Configure availability rules (step 2)
+GET, POST  /resources/<id>/edit              - Edit resource (owner/admin)
+POST       /resources/<id>/delete            - Delete resource (owner/admin)
+GET        /resources/my-resources           - View current user's resources
+```
+
+#### Booking Routes (`/bookings/*`)
+```
+GET        /bookings/                        - View all user's bookings
+GET        /bookings/<id>                    - View booking details
+GET        /bookings/resource/<id>/calendar  - View booking calendar for resource
+GET, POST  /bookings/resource/<id>/create    - Create new booking
+POST       /bookings/<id>/cancel             - Cancel a booking
+POST       /bookings/<id>/approve            - Approve/reject booking (owner/admin)
+GET        /bookings/pending                 - View pending approvals (owner/admin)
+GET        /bookings/resource/<id>/available-slots - Get available time slots (AJAX)
+GET, POST  /bookings/resource/<id>/waitlist  - Join resource waitlist
+GET        /bookings/calendar-data/<id>      - Get calendar events (AJAX)
+GET        /bookings/api/pending_approvals_count - Pending count (AJAX)
+```
+
+#### Message Routes (`/messages/*`)
+```
+GET        /messages/                        - Display message inbox
+GET        /messages/thread/<id>             - Display specific thread
+POST       /messages/send                    - Send message in thread
+GET, POST  /messages/new                     - Create new message thread
+GET        /messages/api/threads             - Get user's threads (AJAX)
+GET        /messages/api/unread_count        - Get unread count (AJAX)
+GET        /messages/api/thread/<id>/messages - Get thread messages (AJAX)
+```
+
+#### Review Routes (`/reviews/*`)
+```
+GET, POST  /reviews/create/<booking_id>      - Create review for booking
+GET        /reviews/<id>                     - View review details
+GET, POST  /reviews/<id>/edit                - Edit existing review
+POST       /reviews/<id>/delete              - Delete review
+POST       /reviews/<id>/respond             - Add host response (owner)
+GET        /reviews/my-reviews               - View all user's reviews
+GET        /reviews/resource/<id>            - Get reviews for resource (AJAX)
+```
+
+#### Admin Routes (`/admin/*`)
+
+**Dashboard:**
+```
+GET        /admin/dashboard                  - Admin dashboard with statistics
+```
+
+**User Management:**
+```
+GET        /admin/users                      - List all users with filters
+GET        /admin/users/<id>                 - View detailed user information
+POST       /admin/users/<id>/change-role     - Change user role
+POST       /admin/users/<id>/ban             - Ban user from system
+POST       /admin/users/<id>/unban           - Unban user
+```
+
+**Resource Management:**
+```
+GET        /admin/resources                  - List all resources with filters
+POST       /admin/resources/<id>/update-status - Update resource status
+POST       /admin/resources/<id>/delete      - Delete resource (hard delete)
+```
+
+**Booking Management:**
+```
+GET        /admin/bookings                   - List all bookings with filters
+POST       /admin/bookings/<id>/cancel       - Cancel booking (admin override)
+```
+
+**Review Moderation:**
+```
+GET        /admin/reviews                    - List all reviews with filters
+POST       /admin/reviews/<id>/approve       - Approve pending review
+POST       /admin/reviews/<id>/hide          - Hide review from users
+POST       /admin/reviews/<id>/delete        - Delete review with reason
+```
+
+---
+
+## Testing with pytest
+
+### Running Tests
+
+**Run all tests:**
+```bash
+cd /Users/hii/Desktop/AiDD\ Final\ Project/Final_Project
+python3 -m pytest
+```
+
+**Run with verbose output:**
+```bash
+python3 -m pytest -v
+```
+
+**Run specific test file:**
+```bash
+python3 -m pytest tests/test_auth.py
+```
+
+**Run with coverage report:**
+```bash
+python3 -m pytest --cov=src --cov-report=html
+open htmlcov/index.html
+```
+
+**Run tests matching pattern:**
+```bash
+python3 -m pytest -k "test_login or test_register"
+```
+
+### Test Structure
+
+```
+tests/
+├── test_auth.py              # Authentication tests
+├── test_resources.py         # Resource CRUD tests
+├── test_bookings.py          # Booking system tests
+├── test_messages.py          # Messaging system tests
+├── test_reviews.py           # Review system tests
+├── test_admin.py             # Admin functionality tests
+├── test_security.py          # Security validation tests
+└── conftest.py               # Pytest fixtures and configuration
+```
+
+### Example Test Cases
+
+**Authentication Test Example:**
+```python
+def test_register_success(client):
+    """Test successful user registration"""
+    response = client.post('/auth/register', data={
+        'name': 'Test User',
+        'email': 'test@iu.edu',
+        'password': 'TestPass123!',
+        'confirm_password': 'TestPass123!'
+    })
+    assert response.status_code == 302
+    assert response.location == '/auth/login'
+```
+
+**Resource Test Example:**
+```python
+def test_create_resource_requires_auth(client):
+    """Test resource creation requires authentication"""
+    response = client.get('/resources/create')
+    assert response.status_code == 302
+    assert '/auth/login' in response.location
+```
+
+**Booking Test Example:**
+```python
+def test_booking_conflict_detection(client, auth):
+    """Test booking conflict detection"""
+    auth.login()
+    # Create first booking
+    client.post('/bookings/resource/1/create', data={
+        'start_datetime': '2025-11-20T14:00:00',
+        'end_datetime': '2025-11-20T16:00:00'
+    })
+    # Try to create conflicting booking
+    response = client.post('/bookings/resource/1/create', data={
+        'start_datetime': '2025-11-20T15:00:00',
+        'end_datetime': '2025-11-20T17:00:00'
+    })
+    assert b'Time slot already booked' in response.data
+```
+
+### Test Coverage Goals
+
+- **Unit Tests:** 80%+ coverage of DAL and model methods
+- **Integration Tests:** All API endpoints tested
+- **Security Tests:** XSS, CSRF, SQL injection validation
+- **E2E Tests:** Critical user journeys (register → login → book → review)
+
+### Running Security Tests
+
+**SQL Injection Tests:**
+```bash
+python3 -m pytest tests/test_security.py::test_sql_injection -v
+```
+
+**XSS Tests:**
+```bash
+python3 -m pytest tests/test_security.py::test_xss_prevention -v
+```
+
+**CSRF Tests:**
+```bash
+python3 -m pytest tests/test_security.py::test_csrf_protection -v
+```
+
+---
+
+**Last Updated:** 2025-11-15
 **API Version:** 1.0.0
+**Total Endpoints:** 59
 **Project Status:** Production-Ready

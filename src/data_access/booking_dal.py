@@ -255,7 +255,11 @@ class BookingDAL(BaseDAL):
             params.append(status)
 
         if upcoming_only:
-            query += " AND b.end_datetime > datetime('now') AND b.status NOT IN ('completed', 'cancelled')"
+            # Use local time for comparison since bookings are stored in local time
+            from datetime import datetime
+            current_local = datetime.now().isoformat()
+            query += " AND b.end_datetime > ? AND b.status NOT IN ('completed', 'cancelled')"
+            params.append(current_local)
 
         # Order by status first (approved, then completed), then by latest bookings within each status
         query += """
@@ -754,7 +758,11 @@ class BookingDAL(BaseDAL):
             params.append(status)
 
         if upcoming_only:
-            query += " AND end_datetime > datetime('now') AND status NOT IN ('completed', 'cancelled')"
+            # Use local time for comparison since bookings are stored in local time
+            from datetime import datetime
+            current_local = datetime.now().isoformat()
+            query += " AND end_datetime > ? AND status NOT IN ('completed', 'cancelled')"
+            params.append(current_local)
 
         result = cls.execute_query(query, tuple(params))
         return result[0]['count'] if result else 0
@@ -911,15 +919,19 @@ class BookingDAL(BaseDAL):
         Returns:
             int: Number of bookings updated
         """
+        # Get current local time as ISO string to compare with stored local time dates
+        from datetime import datetime
+        current_local = datetime.now().isoformat()
+
         # First, get the bookings that will be completed
         select_query = """
             SELECT b.booking_id, b.requester_id, b.resource_id, r.title as resource_title
             FROM bookings b
             LEFT JOIN resources r ON b.resource_id = r.resource_id
             WHERE b.status = 'approved'
-              AND datetime(b.end_datetime) < datetime('now')
+              AND b.end_datetime < ?
         """
-        completed_bookings = cls.execute_query(select_query, ())
+        completed_bookings = cls.execute_query(select_query, (current_local,))
 
         # Update their status
         update_query = """
@@ -927,9 +939,9 @@ class BookingDAL(BaseDAL):
             SET status = 'completed',
                 updated_at = CURRENT_TIMESTAMP
             WHERE status = 'approved'
-              AND datetime(end_datetime) < datetime('now')
+              AND end_datetime < ?
         """
-        rows_affected = cls.execute_update(update_query, ())
+        rows_affected = cls.execute_update(update_query, (current_local,))
 
         # Send system notifications for each completed booking
         if completed_bookings:

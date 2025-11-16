@@ -7,6 +7,9 @@ Handles all database operations for resources and resource categories.
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime
 from .base_dal import BaseDAL
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ResourceDAL(BaseDAL):
@@ -757,10 +760,7 @@ class ResourceDAL(BaseDAL):
             # 9. Update message threads to set resource_id to NULL
             cls.execute_update("UPDATE message_threads SET resource_id = NULL WHERE resource_id = ?", (resource_id,))
 
-            # 10. Update search analytics to set clicked_resource_id to NULL
-            cls.execute_update("UPDATE search_analytics SET clicked_resource_id = NULL WHERE clicked_resource_id = ?", (resource_id,))
-
-            # 11. Finally delete the resource itself
+            # 10. Finally delete the resource itself
             rows_affected = cls.execute_update("DELETE FROM resources WHERE resource_id = ?", (resource_id,))
 
             return rows_affected > 0

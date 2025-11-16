@@ -1,383 +1,190 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - Campus Resource Hub</title>
+{% extends 'base.html' %}
 
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Actor&family=Noto+Serif:wght@400&display=swap" rel="stylesheet">
+{% block title %}Home - Campus Resource Hub{% endblock %}
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
-</head>
-<body>
-    <!-- Background Effects -->
-    <div class="background-effects">
-        <!-- Blur White -->
-        <div class="blur-white"></div>
+{% block scripts_head %}
+<!-- Anime.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+{% endblock %}
 
-        <!-- Gradient Ellipse 1 -->
-        <div class="gradient-ellipse-1">
-            <div style="position: absolute; inset: -31.25% -24.81%;">
-                <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 773 666">
-                    <defs>
-                        <filter id="filter0_f_home_1" x="0" y="0" width="772.117" height="665.839" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                            <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_home_1"/>
-                        </filter>
-                    </defs>
-                    <g filter="url(#filter0_f_home_1)">
-                        <ellipse cx="386.059" cy="332.919" rx="258.013" ry="204.874" fill="#9909DD"/>
-                    </g>
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">Find Campus Resources</h1>
+        <p class="hero-subtitle">Search and reserve study rooms, equipment, event spaces, and more.</p>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <form action="{{ url_for('resource.index') }}" method="GET" class="search-form">
+                <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="m21 21-4.35-4.35"/>
                 </svg>
-            </div>
+                <input
+                    type="text"
+                    name="q"
+                    class="search-input"
+                    placeholder="Search for resources, rooms, equipment..."
+                    required
+                />
+                <button type="submit" class="search-button">Search</button>
+            </form>
         </div>
-
-        <!-- Gradient Ellipse 2 -->
-        <div class="gradient-ellipse-2">
-            <div style="position: absolute; inset: -41.49% -30.77%;">
-                <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 673 565">
-                    <defs>
-                        <filter id="filter0_f_home_2" x="0" y="0" width="672.241" height="564.683" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                            <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_home_2"/>
-                        </filter>
-                    </defs>
-                    <g filter="url(#filter0_f_home_2)">
-                        <ellipse cx="336.121" cy="282.341" rx="208.075" ry="154.295" fill="#8646EE"/>
-                    </g>
-                </svg>
-            </div>
-        </div>
-
-        <!-- Gradient Ellipse 3 -->
-        <div class="gradient-ellipse-3">
-            <div style="position: absolute; inset: -62.11% -38.17%;">
-                <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 592 463">
-                    <defs>
-                        <filter id="filter0_f_home_3" x="0" y="0" width="591.572" height="462.246" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                            <feGaussianBlur stdDeviation="64.023" result="effect1_foregroundBlur_home_3"/>
-                        </filter>
-                    </defs>
-                    <g filter="url(#filter0_f_home_3)">
-                        <ellipse cx="295.786" cy="231.123" rx="167.74" ry="103.077" fill="#3F0B93"/>
-                    </g>
-                </svg>
-            </div>
-        </div>
-
-        <!-- Gradient Ellipse 4 -->
-        <div class="gradient-ellipse-4">
-            <div style="position: absolute; inset: -37.04% -24.07%;">
-                <svg style="display: block; width: 100%; height: 100%;" fill="none" preserveAspectRatio="none" viewBox="0 0 867 662">
-                    <defs>
-                        <filter id="filter0_f_home_4" x="0" y="0" width="866.871" height="661.998" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-                            <feFlood flood-opacity="0" result="BackgroundImageFix"/>
-                            <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-                            <feGaussianBlur stdDeviation="70.4253" result="effect1_foregroundBlur_home_4"/>
-                        </filter>
-                    </defs>
-                    <g filter="url(#filter0_f_home_4)">
-                        <ellipse cx="433.436" cy="330.999" rx="292.585" ry="190.148" fill="black"/>
-                    </g>
-                </svg>
-            </div>
-        </div>
-
-        <!-- Noise Texture -->
-        <div class="noise-texture"></div>
     </div>
-    <!-- Navigation Bar -->
-    <nav class="navbar">
-        <div class="navbar-container">
-            <!-- Left: Logo and Name -->
-            <div class="navbar-left">
-                <a href="{{ url_for('main.index') }}" class="navbar-logo">
-                    <svg class="logo-icon" fill="none" preserveAspectRatio="none" viewBox="0 0 11 11">
-                        <g>
-                            <path d="M6.16487 7.90918C5.32855 7.59855 4.46834 7.55077 3.67982 7.76582C3.13024 7.90919 2.60455 8.19592 2.12666 8.55434L1.79213 8.84108L1.69655 8.93666L1.9116 9.12781C1.93549 9.12781 1.9355 9.15171 1.95939 9.17561C2.00718 9.2234 2.05497 9.24729 2.12666 9.29508L2.27002 9.39066L2.41339 9.27118C2.43728 9.24729 2.48507 9.1995 2.53286 9.17561C2.96297 8.81719 3.44086 8.57824 3.94265 8.45876C4.58781 8.2915 5.28076 8.3154 5.97371 8.57824C6.54718 8.79329 7.71802 9.05613 9.12781 8.45876L9.17561 8.43487L9.24729 8.36319C9.24729 8.33929 9.27119 8.33929 9.29508 8.31539C9.41455 8.17203 9.53403 8.02866 9.62961 7.8614L10.1075 7.12066L9.34287 7.55076C8.21981 8.17202 7.19234 8.2915 6.16487 7.90918Z" fill="black"/>
-                            <path d="M2.89127 5.3285C3.53642 5.16124 4.22937 5.18513 4.92232 5.44797C5.68695 5.73471 7.64632 6.14092 9.84464 4.15766L10.2031 3.79924L10.227 3.77534L10.3225 3.67976L10.2747 3.56029C10.2508 3.46471 10.2031 3.34524 10.1553 3.22577L10.0358 2.89123L9.79685 3.13018C9.77295 3.17797 9.72516 3.20186 9.67737 3.24965C8.626 4.32492 7.00116 5.42408 5.13737 4.75503C4.30105 4.4444 3.44084 4.3966 2.65232 4.61166C1.88769 4.82671 1.21863 5.23292 0.597369 5.80639V5.7825L0.238947 6.16482C0.238947 6.18871 0.215057 6.18871 0.191162 6.21261L0.119474 6.28429L0.14337 6.37987C0.167265 6.49934 0.215053 6.61881 0.238947 6.73829L0.382317 7.12061L0.621265 6.80998C0.64516 6.76219 0.692948 6.73829 0.716842 6.6905C1.21863 6.2365 1.91158 5.59134 2.89127 5.3285Z" fill="black"/>
-                            <path d="M0.573487 4.89841C1.12307 4.32493 1.74433 3.96651 2.41338 3.77535C3.05854 3.60809 3.75148 3.63198 4.44443 3.89482C6.59496 4.68335 8.45875 3.39303 9.27117 2.70009L9.5818 2.38946L9.70128 2.29387L9.6057 2.15051C9.53401 2.07883 9.48623 1.98325 9.41454 1.88767L9.27117 1.6965L9.10391 1.86377C9.08001 1.88767 9.03222 1.93545 9.00833 1.95935C8.00475 2.91514 6.45159 3.89483 4.68338 3.22577C3.84706 2.91514 2.98685 2.86735 2.19833 3.0824C1.69654 3.22577 1.21864 3.46472 0.740746 3.77535L0.238955 4.18156C0.191165 4.22935 0.167271 4.25325 0.119481 4.30104L0.0716961 4.34882V4.42051C0.0478014 4.58777 0.0477985 4.75504 0.0239037 4.89841L7.51212e-06 5.49578L0.406221 5.06567C0.454011 5.01788 0.501803 4.9462 0.573487 4.89841Z" fill="black"/>
-                            <path d="M6.85776 9.53396L6.80996 9.67733L6.85776 9.53396C6.78607 9.51006 6.73829 9.48616 6.6666 9.46227C5.83029 9.15164 4.97007 9.10385 4.18154 9.31891C4.01428 9.3667 3.84702 9.41448 3.67976 9.48617L3.10628 9.74901L2.96292 9.82069L3.44081 9.98796C3.58418 10.0357 3.72755 10.0835 3.87091 10.1313L3.94259 10.1552L4.01428 10.1313C4.08597 10.1074 4.15765 10.0596 4.22933 10.0596C4.27712 10.0596 4.32492 10.0357 4.3727 10.0119C4.94618 9.86849 5.56744 9.86848 6.23649 10.0835C6.30818 10.1074 6.35597 10.1313 6.42765 10.1552L6.54713 10.203L6.61881 10.1791C6.78607 10.1313 6.97723 10.0835 7.1206 10.0119L7.78965 9.77291L7.0967 9.60564C7.02502 9.58175 6.92944 9.55785 6.85776 9.53396Z" fill="black"/>
-                            <path d="M1.43373 2.38964L1.36205 2.24627L1.43373 2.38964C1.5771 2.31795 1.74437 2.27016 1.88774 2.22237C2.53289 2.05511 3.22584 2.079 3.91879 2.34184C4.37279 2.50911 4.82679 2.58079 5.32858 2.58079C6.33216 2.58079 7.33573 2.22237 8.26763 1.52942L8.62605 1.24268L8.74552 1.14711L8.53047 0.979841C8.45879 0.908157 8.36321 0.836475 8.26763 0.788686L8.12426 0.693108L8.00479 0.788686C7.957 0.812581 7.9331 0.860369 7.88531 0.884263C6.61889 1.84005 5.35248 2.1029 4.15774 1.6489C3.29753 1.33827 2.43731 1.26658 1.5771 1.52942C1.50542 1.55332 1.43373 1.57721 1.33815 1.60111L1.29037 1.625L1.21868 1.69668C1.21868 1.72058 1.19479 1.72058 1.17089 1.74448C1.07532 1.88784 0.955837 2.00732 0.860258 2.15069L0.406259 2.84364L1.147 2.46132C1.26647 2.46132 1.36205 2.41353 1.43373 2.38964Z" fill="black"/>
-                            <path d="M3.39306 0.764699L3.46474 0.788595C3.77537 0.908068 4.25327 1.02754 4.85064 1.02754C5.4719 1.02754 6.06927 0.884172 6.66664 0.645225L7.40737 0.286804L6.90559 0.119545C6.76222 0.0717552 6.61885 0.0239657 6.45158 7.09193e-05H6.3799L6.30822 0.0239598C6.23654 0.0478546 6.16485 0.0956499 6.09316 0.119545C5.37632 0.382387 4.65948 0.430176 3.96653 0.239018C3.89485 0.215124 3.82316 0.191225 3.75148 0.16733L3.6798 0.143434L3.60811 0.16733C3.46474 0.215119 3.32138 0.262912 3.17801 0.334596L2.62842 0.573543L3.2019 0.740802C3.24969 0.716908 3.32137 0.740804 3.39306 0.764699Z" fill="black"/>
-                            <path d="M10.5136 4.58792L10.1552 4.94634C10.1074 4.99413 10.0596 5.04192 10.0118 5.08971C9.03216 6.02161 7.45511 7.02518 5.68689 6.35613C4.85058 6.0455 3.99037 5.99771 3.20184 6.21277C2.4611 6.42782 1.79205 6.81013 1.19468 7.38361L0.884049 7.71813L0.788471 7.83761L0.884049 7.98098C0.955733 8.07656 1.00353 8.14824 1.05131 8.24382L1.19468 8.45887L1.36194 8.24382C1.38584 8.21993 1.43363 8.17213 1.45752 8.14824C2.03099 7.52697 2.65226 7.14466 3.3691 6.9535C4.01426 6.78624 4.70721 6.81013 5.40015 7.07297C5.99752 7.28803 6.61879 7.35972 7.24005 7.28803C8.33921 7.16856 9.43837 6.54729 10.2508 5.85435C10.2986 5.80656 10.3464 5.78266 10.3942 5.73487L10.4658 5.66318V5.5915C10.4658 5.44813 10.4897 5.28087 10.4897 5.1375L10.5136 4.58792Z" fill="black"/>
-                        </g>
-                    </svg>
-                    <span class="logo-text">Campus Hub</span>
-                </a>
-            </div>
+</section>
 
-            <!-- Center: Navigation Links -->
-            <div class="navbar-center">
-                <a href="{{ url_for('main.index') }}" class="nav-link active">Home</a>
-                <a href="{{ url_for('resource.index') }}" class="nav-link">Browse Resources</a>
-                {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('booking.index') }}" class="nav-link">My Bookings</a>
-                    <a href="{{ url_for('message.inbox') }}" class="nav-link">Messages</a>
-                    {% if current_user.role in ['staff', 'admin'] %}
-                        <a href="{{ url_for('booking.pending_approvals') }}" class="nav-link">Approvals</a>
-                    {% endif %}
-                {% endif %}
-            </div>
+<!-- Quick Filters -->
+<section class="filters-section">
+    <div class="filters-container">
+        <a href="{{ url_for('resource.index') }}" class="filter-chip">All Resources</a>
+        <a href="#" class="filter-chip" id="available-now-chip">Available Now</a>
+        <a href="{{ url_for('resource.index', category=1) }}" class="filter-chip">Study Spaces</a>
+        <a href="{{ url_for('resource.index', category=2) }}" class="filter-chip">Equipment</a>
+        <a href="{{ url_for('resource.index', category=4) }}" class="filter-chip">Event Spaces</a>
+    </div>
+</section>
 
-            <!-- Right: Theme Toggle and Account -->
-            <div class="navbar-right">
-                <!-- Theme Toggle Button -->
-                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
-                    <svg class="sun-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="5"/>
-                        <line x1="12" y1="1" x2="12" y2="3"/>
-                        <line x1="12" y1="21" x2="12" y2="23"/>
-                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                        <line x1="1" y1="12" x2="3" y2="12"/>
-                        <line x1="21" y1="12" x2="23" y2="12"/>
-                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-                    </svg>
-                    <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/>
-                    </svg>
-                </button>
+<script>
+// Handle "Available Now" click with current date/time
+document.getElementById('available-now-chip').addEventListener('click', function(e) {
+    e.preventDefault();
+    const now = new Date();
+    const date = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const time = now.toTimeString().split(' ')[0].substring(0, 5); // HH:MM
+    window.location.href = "{{ url_for('resource.index') }}" + "?availability_date=" + date + "&availability_time=" + time;
+});
+</script>
 
-                <!-- Account Dropdown -->
-                {% if current_user.is_authenticated %}
-                <div class="account-dropdown">
-                    <button class="account-button" onclick="toggleAccountMenu()">
-                        <div class="account-avatar">
-                            {{ current_user.name[0].upper() }}
-                        </div>
-                        <svg class="chevron-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </button>
-
-                    <!-- Dropdown Menu -->
-                    <div class="account-menu" id="accountMenu">
-                        <div class="account-info">
-                            <div class="account-name">{{ current_user.name }}</div>
-                            <div class="account-role">{{ current_user.role.capitalize() }}</div>
-                        </div>
-                        <div class="menu-divider"></div>
-                        <a href="{{ url_for('auth.edit_profile') }}" class="menu-item">
-                            <svg class="menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
-                            Edit Profile
-                        </a>
-                        <div class="menu-divider"></div>
-                        <a href="{{ url_for('auth.logout') }}" class="menu-item logout">
-                            <svg class="menu-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            Sign Out
-                        </a>
-                    </div>
+<!-- Resource Categories -->
+<section class="categories-section">
+    <h2 class="section-title">Browse by Category</h2>
+    <div class="categories-carousel">
+        <a href="{{ url_for('resource.index', category=1) }}" class="category-box" data-category="study-rooms">
+            <div class="category-content">
+                <div class="category-icon">
+                    <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Light.png') }}" alt="Study Rooms" class="icon-light">
+                    <img src="{{ url_for('static', filename='images/icons/Study_Room_Icon_Dark.png') }}" alt="Study Rooms" class="icon-dark">
                 </div>
-                {% else %}
-                <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <!-- Flash Messages -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            <div class="flash-container">
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category == 'error' else category }}">
-                        {{ message }}
-                        <button class="alert-close" onclick="this.parentElement.remove()">×</button>
-                    </div>
-                {% endfor %}
-            </div>
-        {% endif %}
-    {% endwith %}
-
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Hero Section -->
-        <section class="hero-section">
-            <div class="hero-content">
-                <h1 class="hero-title">{% if current_user.is_authenticated %}Welcome back, {{ current_user.name.split()[0] }}!{% else %}Welcome to Campus Resource Hub{% endif %}</h1>
-                <p class="hero-subtitle">Find and reserve campus resources including study rooms, equipment, event spaces, and more.</p>
-
-                <!-- Search Bar -->
-                <div class="search-container">
-                    <form action="{{ url_for('resource.index') }}" method="GET" class="search-form">
-                        <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-                        <input
-                            type="text"
-                            name="q"
-                            class="search-input"
-                            placeholder="Search for resources, rooms, equipment..."
-                            required
-                        />
-                        <button type="submit" class="search-button">Search</button>
-                    </form>
-                </div>
-            </div>
-        </section>
-
-        <!-- Quick Stats -->
-        <section class="stats-section">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #9909DD, #8646EE);">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                        <line x1="16" y1="2" x2="16" y2="6"/>
-                        <line x1="8" y1="2" x2="8" y2="6"/>
-                        <line x1="3" y1="10" x2="21" y2="10"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-label">Active Bookings</div>
-                    <div class="stat-value">3</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #8646EE, #3F0B93);">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-label">Messages</div>
-                    <div class="stat-value">5</div>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #3F0B93, #9909DD);">
-                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                </div>
-                <div class="stat-info">
-                    <div class="stat-label">Resources Available</div>
-                    <div class="stat-value">24</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Resource Categories -->
-        <section class="categories-section">
-            <h2 class="section-title">Browse by Category</h2>
-            <div class="categories-grid">
-                <a href="{{ url_for('resource.index', category=1) }}" class="category-card">
-                    <div class="category-icon">📚</div>
-                    <h3 class="category-name">Study Rooms</h3>
+                <h3 class="category-name">Study Rooms</h3>
+                <div class="category-details">
                     <p class="category-description">Reserve quiet spaces for individual or group study sessions</p>
-                    <div class="category-count">12 available</div>
-                </a>
+                    <div class="category-count">{{ category_availability.get(1, 0) }} available</div>
+                </div>
+            </div>
+        </a>
 
-                <a href="{{ url_for('resource.index', category=2) }}" class="category-card">
-                    <div class="category-icon">📹</div>
-                    <h3 class="category-name">AV Equipment</h3>
+        <a href="{{ url_for('resource.index', category=2) }}" class="category-box" data-category="av-equipment">
+            <div class="category-content">
+                <div class="category-icon">
+                    <img src="{{ url_for('static', filename='images/icons/AV_Equip_Light.png') }}" alt="AV Equipment" class="icon-light">
+                    <img src="{{ url_for('static', filename='images/icons/AV_Equip_Dark.png') }}" alt="AV Equipment" class="icon-dark">
+                </div>
+                <h3 class="category-name">AV Equipment</h3>
+                <div class="category-details">
                     <p class="category-description">Borrow projectors, cameras, and audio-visual equipment</p>
-                    <div class="category-count">8 available</div>
-                </a>
+                    <div class="category-count">{{ category_availability.get(2, 0) }} available</div>
+                </div>
+            </div>
+        </a>
 
-                <a href="{{ url_for('resource.index', category=3) }}" class="category-card">
-                    <div class="category-icon">🔬</div>
-                    <h3 class="category-name">Lab Instruments</h3>
+        <a href="{{ url_for('resource.index', category=3) }}" class="category-box" data-category="lab-instruments">
+            <div class="category-content">
+                <div class="category-icon">
+                    <img src="{{ url_for('static', filename='images/icons/Lab_Light.png') }}" alt="Lab Instruments" class="icon-light">
+                    <img src="{{ url_for('static', filename='images/icons/Lab_Dark.png') }}" alt="Lab Instruments" class="icon-dark">
+                </div>
+                <h3 class="category-name">Lab Instruments</h3>
+                <div class="category-details">
                     <p class="category-description">Book specialized laboratory equipment and instruments</p>
-                    <div class="category-count">15 available</div>
-                </a>
+                    <div class="category-count">{{ category_availability.get(3, 0) }} available</div>
+                </div>
+            </div>
+        </a>
 
-                <a href="{{ url_for('resource.index', category=4) }}" class="category-card">
-                    <div class="category-icon">🎭</div>
-                    <h3 class="category-name">Event Spaces</h3>
+        <a href="{{ url_for('resource.index', category=4) }}" class="category-box" data-category="event-spaces">
+            <div class="category-content">
+                <div class="category-icon">
+                    <img src="{{ url_for('static', filename='images/icons/Event_Light.png') }}" alt="Event Spaces" class="icon-light">
+                    <img src="{{ url_for('static', filename='images/icons/Event_Dark.png') }}" alt="Event Spaces" class="icon-dark">
+                </div>
+                <h3 class="category-name">Event Spaces</h3>
+                <div class="category-details">
                     <p class="category-description">Book venues for events, meetings, and presentations</p>
-                    <div class="category-count">6 available</div>
-                </a>
+                    <div class="category-count">{{ category_availability.get(4, 0) }} available</div>
+                </div>
+            </div>
+        </a>
 
-                <a href="{{ url_for('resource.index', category=7) }}" class="category-card">
-                    <div class="category-icon">💻</div>
-                    <h3 class="category-name">Computer Labs</h3>
+        <a href="{{ url_for('resource.index', category=7) }}" class="category-box" data-category="computer-labs">
+            <div class="category-content">
+                <div class="category-icon">
+                    <img src="{{ url_for('static', filename='images/icons/Computer_light.png') }}" alt="Computer Labs" class="icon-light">
+                    <img src="{{ url_for('static', filename='images/icons/Computer_Dark.png') }}" alt="Computer Labs" class="icon-dark">
+                </div>
+                <h3 class="category-name">Computer Labs</h3>
+                <div class="category-details">
                     <p class="category-description">Access computer labs with specialized software</p>
-                    <div class="category-count">4 available</div>
+                    <div class="category-count">{{ category_availability.get(7, 0) }} available</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</section>
+
+<!-- Featured Resources -->
+<section class="featured-section">
+    <h2 class="section-title">Featured Resources</h2>
+    <div class="resources-grid">
+        {% if featured_resources %}
+            {% for resource in featured_resources %}
+                {% set icon_map = {
+                    'Study Rooms': 'Study_Room_Icon',
+                    'AV Equipment': 'AV_Equip',
+                    'Lab Instruments': 'Lab',
+                    'Event Spaces': 'Event',
+                    'Computer Labs': 'Computer'
+                } %}
+                {% set icon_name = icon_map.get(resource.category_name, 'Study_Room_Icon') %}
+                <a href="{{ url_for('resource.detail', resource_id=resource.resource_id) }}" class="resource-card">
+                    <div class="resource-image" style="background: linear-gradient(135deg, rgba(153, 9, 221, 0.1), rgba(134, 70, 238, 0.1));">
+                        {% if resource.primary_image %}
+                            <img src="{{ url_for('static', filename='uploads/' + resource.primary_image) }}" alt="{{ resource.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <div class="resource-info">
+                        <h3 class="resource-title">{{ resource.title }}</h3>
+                        <p class="resource-category">
+                            <img src="{{ url_for('static', filename='images/icons/' + icon_name + '_Light.png') }}" alt="" class="icon-light category-inline-icon">
+                            <img src="{{ url_for('static', filename='images/icons/' + icon_name + '_Dark.png') }}" alt="" class="icon-dark category-inline-icon">
+                            {{ resource.category_name }}
+                        </p>
+                        <p class="resource-description">{{ resource.description[:80] }}{% if resource.description|length > 80 %}...{% endif %}</p>
+                        <div class="resource-meta">
+                            <span class="resource-location">📍 {{ resource.location }}</span>
+                            {% if resource.avg_rating and resource.review_count > 0 %}
+                                <span class="resource-rating">⭐ {{ "%.1f"|format(resource.avg_rating) }} ({{ resource.review_count }} reviews)</span>
+                            {% elif resource.capacity %}
+                                <span class="resource-capacity">👥 {{ resource.capacity }} people</span>
+                            {% endif %}
+                        </div>
+                        <button class="resource-book-btn">Book Now</button>
+                    </div>
                 </a>
+            {% endfor %}
+        {% else %}
+            <p>No featured resources available at the moment.</p>
+        {% endif %}
+    </div>
+</section>
 
-                <a href="#" class="category-card">
-                    <div class="category-icon">🎨</div>
-                    <h3 class="category-name">Creative Studios</h3>
-                    <p class="category-description">Book music rooms, art studios, and maker spaces</p>
-                    <div class="category-count">7 available</div>
-                </a>
-            </div>
-        </section>
-
-        <!-- Recent Activity -->
-        <section class="activity-section">
-            <h2 class="section-title">Your Recent Activity</h2>
-            <div class="activity-list">
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: rgba(153, 9, 221, 0.1); color: #9909DD;">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
-                        </svg>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Booked Study Room 301</div>
-                        <div class="activity-time">Today at 2:30 PM</div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: rgba(134, 70, 238, 0.1); color: #8646EE;">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Returned Camera Equipment</div>
-                        <div class="activity-time">Yesterday at 11:00 AM</div>
-                    </div>
-                </div>
-
-                <div class="activity-item">
-                    <div class="activity-icon" style="background: rgba(63, 11, 147, 0.1); color: #3F0B93;">
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                            <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                        </svg>
-                    </div>
-                    <div class="activity-details">
-                        <div class="activity-title">Lab Booking Confirmed</div>
-                        <div class="activity-time">2 days ago</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <p>&copy; 2025 Campus Resource Hub - Team 13</p>
-                <p class="footer-subtitle">AI Driven Development (AiDD) 2025 Capstone Project<br>Kelley School of Business - Indiana University</p>
-            </div>
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-content">
+            <p>&copy; 2025 Campus Resource Hub - Team 13</p>
+            <p class="footer-subtitle">AI Driven Development (AiDD) 2025 Capstone Project<br>Kelley School of Business - Indiana University</p>
         </div>
-    </footer>
-
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
-</body>
-</html>
+    </div>
+</footer>
+{% endblock %}

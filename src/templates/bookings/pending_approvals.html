@@ -21,7 +21,7 @@
     }
 
     .page-title {
-        font-family: 'Noto Serif', serif;
+        font-family: 'Actor', sans-serif;
         font-size: 2.5rem;
         font-weight: 600;
         color: var(--text-primary);
@@ -43,7 +43,7 @@
     }
 
     .approval-title {
-        font-family: 'Noto Serif', serif;
+        font-family: 'Actor', sans-serif;
         font-size: 1.4rem;
         font-weight: 600;
         color: var(--text-primary);
@@ -107,8 +107,8 @@
                     </div>
 
                     <div class="approval-details">
-                        📅 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-date-only>{{ booking.start_datetime.strftime('%B %d, %Y') }}</span><br>
-                        🕐 <span class="utc-time" data-utc="{{ booking.start_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>{{ booking.start_datetime.strftime('%I:%M %p') }}</span> - <span class="utc-time" data-utc="{{ booking.end_datetime.strftime('%Y-%m-%d %H:%M:%S') }}" data-time-only>{{ booking.end_datetime.strftime('%I:%M %p') }}</span>
+                        📅 {{ booking.start_datetime.strftime('%B %d, %Y') }}<br>
+                        🕐 {{ booking.start_datetime.strftime('%I:%M %p') }} - {{ booking.end_datetime.strftime('%I:%M %p') }}
                     </div>
 
                     {% if booking.notes %}
@@ -133,7 +133,7 @@
         {% else %}
             <div class="empty-state">
                 <div style="font-size: 4rem; margin-bottom: 20px;">✅</div>
-                <h2 style="font-family: 'Noto Serif', serif; color: var(--text-primary);">All Caught Up!</h2>
+                <h2 style="font-family: 'Actor', sans-serif; color: var(--text-primary);">All Caught Up!</h2>
                 <p style="font-family: 'Actor', sans-serif; color: var(--text-quaternary);">No pending bookings to review.</p>
             </div>
         {% endif %}

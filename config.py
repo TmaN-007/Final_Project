@@ -135,8 +135,8 @@ class ProductionConfig(Config):
     DEBUG = False
     TESTING = False
 
-    # Strict security in production
-    SESSION_COOKIE_SECURE = True
+    # Strict security in production (but allow override via environment variable)
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() == 'true'
 
     # Production database (PostgreSQL recommended)
     DATABASE_URL = os.environ.get('DATABASE_URL') or Config.DATABASE_URL
